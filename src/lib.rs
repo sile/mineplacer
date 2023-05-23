@@ -1,14 +1,17 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
+use pagurus::spatial::Size;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Level {
+    pub size: Size,
+    pub mines: usize,
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+impl Level {
+    pub const EASY: Self = Self::new(Size::from_wh(9, 9), 10);
+    pub const MEDIUM: Self = Self::new(Size::from_wh(16, 16), 40);
+    pub const HARD: Self = Self::new(Size::from_wh(30, 16), 99);
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+    pub const fn new(size: Size, mines: usize) -> Self {
+        Self { size, mines }
     }
 }
