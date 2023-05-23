@@ -1,5 +1,9 @@
 use pagurus::spatial::Size;
 
+pub mod asset;
+pub mod game;
+pub mod tag;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Level {
     pub size: Size,
