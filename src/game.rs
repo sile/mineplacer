@@ -1,4 +1,4 @@
-use crate::asset::Assets;
+use crate::{asset::Assets, model::Model, view::Window};
 use pagurus::{
     event::Event, failure::OrFail, fixed_window::FixedWindow, video::VideoFrame, Result, System,
 };
@@ -15,6 +15,8 @@ pub struct Game {
     assets: Assets,
     video_frame: VideoFrame,
     fixed_window: FixedWindow,
+    window: Window,
+    model: Model,
 }
 
 impl<S: System> pagurus::Game<S> for Game {

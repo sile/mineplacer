@@ -2,7 +2,9 @@ use pagurus::spatial::Size;
 
 pub mod asset;
 pub mod game;
+pub mod model;
 pub mod tag;
+pub mod view;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Level {
