@@ -16,10 +16,10 @@ impl Assets {
         let sprite = self.sprite.as_ref().or_fail()?;
         let region = Size::square(16).to_region();
         Ok(CellSprites {
-            close: sprite.clip(region).or_fail()?,
-            open: sprite.clip(region.shift_x(1)).or_fail()?,
+            over: sprite.clip(region.shift_x(1)).or_fail()?,
             mine: sprite.clip(region.shift_x(2)).or_fail()?,
             focus: sprite.clip(region.shift_x(3)).or_fail()?,
+            under: sprite.clip(region.shift_y(1).shift_x(3)).or_fail()?,
             numbers: [
                 sprite.clip(region).or_fail()?,
                 sprite.clip(region.shift_y(1).shift_x(0)).or_fail()?,
@@ -77,8 +77,8 @@ fn decode_sprite(png: &[u8]) -> Result<Sprite> {
 
 #[derive(Debug)]
 pub struct CellSprites {
-    pub close: Sprite,
-    pub open: Sprite,
+    pub over: Sprite,
+    pub under: Sprite,
     pub mine: Sprite,
     pub focus: Sprite,
     pub numbers: [Sprite; 10],

@@ -1,7 +1,4 @@
-use crate::{
-    asset::Assets,
-    model::{CellType, Model},
-};
+use crate::{asset::Assets, model::Model};
 use pagurus::{
     event::{Event, MouseEvent},
     failure::OrFail,
@@ -83,22 +80,23 @@ impl Window {
         }
 
         let sprite = self.assets.cell_sprites().or_fail()?;
-        for (position, cell_type) in model.board() {
+        for (position, mines) in model.surrounding_mines() {
             let cell_region = cell_region.shift_x(position.x).shift_y(position.y);
             let mut canvas = canvas.offset(cell_region.position);
 
-            canvas.draw_sprite(&sprite.open);
-            match cell_type {
-                CellType::Mine => {
-                    canvas.draw_sprite(&sprite.mine);
-                }
-                CellType::Number(n) => {
-                    canvas.draw_sprite(&sprite.numbers[n]);
-                }
+            if mines >= 0 {
+                canvas.draw_sprite(&sprite.over);
+            } else {
+                canvas.draw_sprite(&sprite.under);
             }
 
-            if self.focus_cell == Some(position) && cell_type != CellType::Number(0) {
-                canvas.draw_sprite(&sprite.focus);
+            if model.has_mine(position) {
+                canvas.draw_sprite(&sprite.mine);
+            } else {
+                canvas.draw_sprite(&sprite.numbers[mines.abs() as usize]);
+                if self.focus_cell == Some(position) && mines > 0 {
+                    canvas.draw_sprite(&sprite.focus);
+                }
             }
         }
 

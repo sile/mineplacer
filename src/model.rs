@@ -39,8 +39,9 @@ impl Model {
         Ok(())
     }
 
-    pub fn board(&self) -> impl '_ + Iterator<Item = (Position, CellType)> {
-        self.positions().map(|p| (p, self.board.cell_type(p)))
+    pub fn surrounding_mines(&self) -> impl '_ + Iterator<Item = (Position, isize)> {
+        self.positions()
+            .map(|p| (p, self.board.surrounding_mines(p)))
     }
 
     pub fn handle_click(&mut self, position: Position) -> Result<()> {
@@ -54,6 +55,10 @@ impl Model {
         Ok(())
     }
 
+    pub fn has_mine(&self, p: Position) -> bool {
+        self.board.cells[p.y as usize][p.x as usize].actual_mine
+    }
+
     fn positions(&self) -> impl '_ + Iterator<Item = Position> {
         (0..HEIGHT).flat_map(|y| (0..WIDTH).map(move |x| Position::from_xy(x as i32, y as i32)))
     }
@@ -65,13 +70,9 @@ struct Board {
 }
 
 impl Board {
-    fn cell_type(&self, p: Position) -> CellType {
-        if self.cells[p.y as usize][p.x as usize].actual_mine {
-            return CellType::Mine;
-        }
-
-        let mut expected: usize = 0;
-        let mut actual: usize = 0;
+    fn surrounding_mines(&self, p: Position) -> isize {
+        let mut expected: isize = 0;
+        let mut actual: isize = 0;
         for y_delta in [-1, 0, 1] {
             for x_delta in [-1, 0, 1] {
                 let p = p.move_y(y_delta).move_x(x_delta);
@@ -88,8 +89,7 @@ impl Board {
                 }
             }
         }
-
-        CellType::Number(expected.saturating_sub(actual))
+        expected - actual
     }
 }
 
@@ -97,10 +97,4 @@ impl Board {
 struct Cell {
     expected_mine: bool,
     actual_mine: bool,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum CellType {
-    Mine,
-    Number(usize),
 }
