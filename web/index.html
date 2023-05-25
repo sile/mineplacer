@@ -1,0 +1,33 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>StackAct</title>
+  </head>
+  <body style="background-color:black">
+    <canvas id="canvas" style="background-color:black; padding:0; margin:auto; display:block"></canvas>
+    <script src="https://cdn.jsdelivr.net/npm/pagurus@0.6.7/dist/pagurus.min.js"></script>
+    <script>
+      Pagurus.Game.load("game.wasm").then(async game => {
+          const canvas = document.getElementById("canvas");
+          const system = await Pagurus.System.create(game.memory, { canvas });
+
+          const resizeCanvas = () => {
+              canvas.height = document.body.clientHeight * 0.95;
+              canvas.width = document.body.clientWidth * 0.95;
+              system.notifyRedrawNeeded();
+          }
+          resizeCanvas();
+          window.addEventListener('resize', resizeCanvas);
+
+          game.initialize(system);
+          while (true) {
+              const event = await system.nextEvent();
+              if (!game.handleEvent(system, event)) {
+                  break;
+              }
+          }
+          alert("Exited the game");
+      });
+    </script>
+  </body>
+</html>
