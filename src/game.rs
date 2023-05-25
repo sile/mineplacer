@@ -1,5 +1,5 @@
 use crate::tag;
-use crate::{asset::Assets, model::Model, view::Window};
+use crate::{model::Model, view::Window};
 use pagurus::event::TimeoutEvent;
 use pagurus::image::{Canvas, Color};
 use pagurus::{
@@ -15,7 +15,6 @@ const RENDER_TIMEOUT_DURATION: Duration = Duration::from_micros(1_000_000 / FPS)
 
 #[derive(Debug, Default)]
 pub struct Game {
-    assets: Assets,
     video_frame: VideoFrame,
     fixed_window: FixedWindow,
     window: Window,
@@ -26,9 +25,12 @@ impl Game {
     fn render<S: System>(&mut self, system: &mut S) -> Result<()> {
         let mut canvas = Canvas::new(&mut self.video_frame);
         canvas.fill_color(Color::BLACK);
-        canvas
-            .mask_region(self.fixed_window.canvas_region())
-            .fill_color(Color::RED);
+        self.window
+            .render(
+                &mut canvas.subregion(self.fixed_window.canvas_region()),
+                &self.model,
+            )
+            .or_fail()?;
         system.video_draw(self.video_frame.as_ref());
         Ok(())
     }
@@ -36,8 +38,12 @@ impl Game {
 
 impl<S: System> pagurus::Game<S> for Game {
     fn initialize(&mut self, system: &mut S) -> Result<()> {
-        self.assets.load().or_fail()?;
         self.fixed_window = FixedWindow::new(Window::WINDOW_SIZE);
+        self.window.load_assets().or_fail()?;
+        self.model.initialize(system).or_fail()?;
+
+        self.model.generate_board().or_fail()?;
+
         system.clock_set_timeout(tag::RENDERING_TIMEOUT, RENDER_TIMEOUT_DURATION);
         Ok(())
     }

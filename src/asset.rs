@@ -11,6 +11,36 @@ impl Assets {
 
         Ok(())
     }
+
+    pub fn cell_sprites(&self) -> Result<CellSprites> {
+        let sprite = self.sprite.as_ref().or_fail()?;
+        let region = Size::square(16).to_region();
+        Ok(CellSprites {
+            close: sprite.clip(region).or_fail()?,
+            open: sprite.clip(region.shift_x(1)).or_fail()?,
+            mine: sprite.clip(region.shift_x(2)).or_fail()?,
+            numbers: [
+                sprite.clip(region).or_fail()?,
+                sprite.clip(region.shift_y(1).shift_x(0)).or_fail()?,
+                sprite.clip(region.shift_y(1).shift_x(1)).or_fail()?,
+                sprite.clip(region.shift_y(1).shift_x(2)).or_fail()?,
+                sprite.clip(region.shift_y(2).shift_x(0)).or_fail()?,
+                sprite.clip(region.shift_y(2).shift_x(1)).or_fail()?,
+                sprite.clip(region.shift_y(2).shift_x(2)).or_fail()?,
+                sprite.clip(region.shift_y(3).shift_x(0)).or_fail()?,
+                sprite.clip(region.shift_y(3).shift_x(1)).or_fail()?,
+                sprite.clip(region.shift_y(3).shift_x(2)).or_fail()?,
+            ],
+        })
+    }
+
+    pub fn sprite_cell_close(&self) -> Result<Sprite> {
+        self.sprite
+            .as_ref()
+            .or_fail()?
+            .clip(Size::square(16).to_region())
+            .or_fail()
+    }
 }
 
 fn decode_sprite(png: &[u8]) -> Result<Sprite> {
@@ -42,4 +72,12 @@ fn decode_sprite(png: &[u8]) -> Result<Sprite> {
             Sprite::from_rgb24_bytes(&rgb_bytes, size).or_fail()
         }
     }
+}
+
+#[derive(Debug)]
+pub struct CellSprites {
+    pub close: Sprite,
+    pub open: Sprite,
+    pub mine: Sprite,
+    pub numbers: [Sprite; 10],
 }
