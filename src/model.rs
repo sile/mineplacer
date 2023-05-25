@@ -1,4 +1,5 @@
 use pagurus::{
+    failure::OrFail,
     random::StdRng,
     spatial::{Contains, Position, Size},
     Result, System,
@@ -40,6 +41,17 @@ impl Model {
 
     pub fn board(&self) -> impl '_ + Iterator<Item = (Position, CellType)> {
         self.positions().map(|p| (p, self.board.cell_type(p)))
+    }
+
+    pub fn handle_click(&mut self, position: Position) -> Result<()> {
+        Size::from_wh(WIDTH as u32, HEIGHT as u32)
+            .contains(&position)
+            .or_fail()?;
+
+        let cell = &mut self.board.cells[position.y as usize][position.x as usize];
+        cell.actual_mine = !cell.actual_mine;
+
+        Ok(())
     }
 
     fn positions(&self) -> impl '_ + Iterator<Item = Position> {

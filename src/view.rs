@@ -17,6 +17,7 @@ pub struct Window {
     assets: Assets,
     focus_cell: Option<Position>,
     pressing: usize,
+    last_pixel_position: Position, // TODO: rename
 }
 
 impl Window {
@@ -115,13 +116,13 @@ impl Window {
     }
 
     fn handle_mouse_event(&mut self, event: MouseEvent, model: &mut Model) -> Result<()> {
+        let pixel_position = event.position();
         self.focus_cell = None;
 
         if matches!(event, MouseEvent::Down { .. }) {
             self.pressing += 1;
         }
 
-        let pixel_position = event.position();
         if self.board_region().contains(&pixel_position) {
             if self.pressing == 0 {
                 let cell_pixel_position = pixel_position - self.board_region().start();
@@ -130,8 +131,20 @@ impl Window {
             }
         }
 
+        if matches!(event, MouseEvent::Down { .. }) {
+            self.last_pixel_position = pixel_position;
+        }
+
         if matches!(event, MouseEvent::Up { .. }) {
             self.pressing = self.pressing.saturating_sub(1);
+
+            if self.pressing == 0 && self.last_pixel_position == pixel_position {
+                if self.board_region().contains(&pixel_position) {
+                    let cell_pixel_position = pixel_position - self.board_region().start();
+                    let cell_position = cell_pixel_position / Self::CELL_SIZE;
+                    model.handle_click(cell_position).or_fail()?;
+                }
+            }
         }
 
         Ok(())
