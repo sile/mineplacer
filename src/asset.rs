@@ -19,6 +19,7 @@ impl Assets {
             close: sprite.clip(region).or_fail()?,
             open: sprite.clip(region.shift_x(1)).or_fail()?,
             mine: sprite.clip(region.shift_x(2)).or_fail()?,
+            focus: sprite.clip(region.shift_x(3)).or_fail()?,
             numbers: [
                 sprite.clip(region).or_fail()?,
                 sprite.clip(region.shift_y(1).shift_x(0)).or_fail()?,
@@ -79,5 +80,6 @@ pub struct CellSprites {
     pub close: Sprite,
     pub open: Sprite,
     pub mine: Sprite,
+    pub focus: Sprite,
     pub numbers: [Sprite; 10],
 }

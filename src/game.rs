@@ -1,6 +1,6 @@
 use crate::tag;
 use crate::{model::Model, view::Window};
-use pagurus::event::TimeoutEvent;
+use pagurus::event::{TimeoutEvent, WindowEvent};
 use pagurus::image::{Canvas, Color};
 use pagurus::{
     event::Event, failure::OrFail, fixed_window::FixedWindow, video::VideoFrame, Result, System,
@@ -49,10 +49,11 @@ impl<S: System> pagurus::Game<S> for Game {
     }
 
     fn handle_event(&mut self, system: &mut S, event: Event) -> Result<bool> {
-        let mut event = self.fixed_window.handle_event(event);
-        match &event {
-            Event::Window(_) => {
+        let event = self.fixed_window.handle_event(event);
+        match event {
+            Event::Window(WindowEvent::RedrawNeeded { .. }) => {
                 self.video_frame = VideoFrame::new(system.video_init(self.fixed_window.size()));
+                self.render(system).or_fail()?;
             }
             Event::Terminating => return Ok(false),
             Event::Timeout(TimeoutEvent {
@@ -62,7 +63,9 @@ impl<S: System> pagurus::Game<S> for Game {
                 self.render(system).or_fail()?;
                 system.clock_set_timeout(tag::RENDERING_TIMEOUT, RENDER_TIMEOUT_DURATION);
             }
-            _ => {}
+            _ => {
+                self.window.handle_event(event, &mut self.model).or_fail()?;
+            }
         }
         Ok(true)
     }

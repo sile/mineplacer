@@ -1,17 +1,22 @@
+use crate::{
+    asset::Assets,
+    model::{CellType, Model},
+};
 use pagurus::{
+    event::{Event, MouseEvent},
     failure::OrFail,
     image::{Canvas, Color},
-    spatial::Size,
+    spatial::{Contains, Position, Region, Size},
     Result,
 };
-
-use crate::{asset::Assets, model::Model};
 
 const BACKGROUND_COLOR: Color = Color::rgb(133, 131, 131);
 
 #[derive(Debug, Default)]
 pub struct Window {
     assets: Assets,
+    focus_cell: Option<Position>,
+    pressing: usize,
 }
 
 impl Window {
@@ -29,20 +34,28 @@ impl Window {
         Ok(())
     }
 
+    fn header_region(&self) -> Region {
+        Self::HEADER_SIZE
+            .to_region()
+            .move_x(Self::MARGIN_SIZE as i32)
+            .move_y(Self::MARGIN_SIZE as i32)
+    }
+
+    fn board_region(&self) -> Region {
+        Self::BOARD_SIZE
+            .to_region()
+            .move_x(Self::MARGIN_SIZE as i32)
+            .move_y(self.header_region().end().y + Self::MARGIN_SIZE as i32)
+    }
+
     pub fn render(&self, canvas: &mut Canvas, model: &Model) -> Result<()> {
         canvas.fill_color(BACKGROUND_COLOR);
 
-        let header_region = Self::HEADER_SIZE
-            .to_region()
-            .move_x(Self::MARGIN_SIZE as i32)
-            .move_y(Self::MARGIN_SIZE as i32);
+        let header_region = self.header_region();
         self.render_header(&mut canvas.subregion(header_region))
             .or_fail()?;
 
-        let board_region = Self::BOARD_SIZE
-            .to_region()
-            .move_x(Self::MARGIN_SIZE as i32)
-            .move_y(header_region.end().y + Self::MARGIN_SIZE as i32);
+        let board_region = self.board_region();
         self.render_board(&mut canvas.subregion(board_region), model)
             .or_fail()?;
 
@@ -75,13 +88,50 @@ impl Window {
 
             canvas.draw_sprite(&sprite.open);
             match cell_type {
-                crate::model::CellType::Mine => {
+                CellType::Mine => {
                     canvas.draw_sprite(&sprite.mine);
                 }
-                crate::model::CellType::Number(n) => {
+                CellType::Number(n) => {
                     canvas.draw_sprite(&sprite.numbers[n]);
                 }
             }
+
+            if self.focus_cell == Some(position) && cell_type != CellType::Number(0) {
+                canvas.draw_sprite(&sprite.focus);
+            }
+        }
+
+        Ok(())
+    }
+
+    pub fn handle_event(&mut self, event: Event, model: &mut Model) -> Result<()> {
+        match event {
+            Event::Mouse(event) => {
+                self.handle_mouse_event(event, model).or_fail()?;
+            }
+            _ => {}
+        }
+        Ok(())
+    }
+
+    fn handle_mouse_event(&mut self, event: MouseEvent, model: &mut Model) -> Result<()> {
+        self.focus_cell = None;
+
+        if matches!(event, MouseEvent::Down { .. }) {
+            self.pressing += 1;
+        }
+
+        let pixel_position = event.position();
+        if self.board_region().contains(&pixel_position) {
+            if self.pressing == 0 {
+                let cell_pixel_position = pixel_position - self.board_region().start();
+                let cell_position = cell_pixel_position / Self::CELL_SIZE;
+                self.focus_cell = Some(cell_position);
+            }
+        }
+
+        if matches!(event, MouseEvent::Up { .. }) {
+            self.pressing = self.pressing.saturating_sub(1);
         }
 
         Ok(())
