@@ -12,6 +12,9 @@ const BACKGROUND_COLOR: Color = Color::rgb(133, 131, 131);
 #[derive(Debug, Default)]
 pub struct Window {
     assets: Assets,
+    help_button: Button,
+    start_8x15_button: Button,
+    start_16x30_button: Button,
     focus_cell: Option<Position>,
     pressing: usize,
     last_pixel_position: Position, // TODO: rename
@@ -29,6 +32,14 @@ impl Window {
 
     pub fn load_assets(&mut self) -> Result<()> {
         self.assets.load().or_fail()?;
+
+        let button_region =
+            Region::new(self.header_region().position, Size::from_wh(20, 21)).move_y(1);
+        let [start_8x16, start_16x30, help] = self.assets.button_sprites().or_fail()?;
+        self.start_8x15_button = Button::new(button_region.move_x(165), start_8x16);
+        self.start_16x30_button = Button::new(button_region.move_x(191), start_16x30);
+        self.help_button = Button::new(button_region.move_x(232), help);
+
         Ok(())
     }
 
@@ -52,6 +63,10 @@ impl Window {
         let header_region = self.header_region();
         self.render_header(&mut canvas.subregion(header_region), model)
             .or_fail()?;
+
+        self.help_button.render(canvas).or_fail()?;
+        self.start_8x15_button.render(canvas).or_fail()?;
+        self.start_16x30_button.render(canvas).or_fail()?;
 
         let board_region = self.board_region();
         self.render_board(&mut canvas.subregion(board_region), model)
@@ -123,16 +138,19 @@ impl Window {
     }
 
     pub fn handle_event(&mut self, event: Event, model: &mut Model) -> Result<()> {
-        match event {
+        match &event {
             Event::Mouse(event) => {
                 self.handle_mouse_event(event, model).or_fail()?;
             }
             _ => {}
         }
+        self.start_8x15_button.handle_event(&event).or_fail()?;
+        self.start_16x30_button.handle_event(&event).or_fail()?;
+        self.help_button.handle_event(&event).or_fail()?;
         Ok(())
     }
 
-    fn handle_mouse_event(&mut self, event: MouseEvent, model: &mut Model) -> Result<()> {
+    fn handle_mouse_event(&mut self, event: &MouseEvent, model: &mut Model) -> Result<()> {
         let pixel_position = event.position();
         self.focus_cell = None;
 
@@ -185,23 +203,43 @@ impl Button {
     }
 
     pub fn render(&self, canvas: &mut Canvas) -> Result<()> {
-        // let sprite = match self.state {
-        //     ButtonState::Normal => &self.sprite.normal,
-        //     ButtonState::Hover => &self.sprite.hover,
-        //     ButtonState::Pressed => &self.sprite.pressed,
-        //     ButtonState::Clicked => &self.sprite.clicked,
-        // };
-        // canvas.draw_sprite(sprite);
+        let sprite = self.sprite.as_ref().or_fail()?;
+        let mut region = self.region;
+        match self.state {
+            ButtonState::Normal => {}
+            ButtonState::Hover => {
+                region.position.y += 1;
+                region.size.height -= 1;
+            }
+            ButtonState::Pressed | ButtonState::Clicked => {
+                region.position.y += 2;
+                region.size.height -= 2;
+            }
+        };
+        canvas.subregion(region).draw_sprite(sprite);
         Ok(())
     }
 
     pub fn handle_event(&mut self, event: &Event) -> Result<()> {
-        // match event {
-        //     Event::Mouse(event) => {
-        //         self.handle_mouse_event(event).or_fail()?;
-        //     }
-        //     _ => {}
-        // }
+        let Event::Mouse(event) = event else { return Ok(()) };
+        let position = event.position();
+        if !self.region.contains(&position) {
+            self.state = ButtonState::Normal;
+            return Ok(());
+        }
+
+        match (self.state, event) {
+            (ButtonState::Normal, MouseEvent::Move { .. }) => {
+                self.state = ButtonState::Hover;
+            }
+            (_, MouseEvent::Down { .. }) => {
+                self.state = ButtonState::Pressed;
+            }
+            (ButtonState::Pressed, MouseEvent::Up { .. }) => {
+                self.state = ButtonState::Clicked;
+            }
+            _ => {}
+        }
         Ok(())
     }
 

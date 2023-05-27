@@ -57,6 +57,16 @@ impl Assets {
             sprite.clip(region.shift_x(9).shift_y(1)).or_fail()?,
         ])
     }
+
+    pub fn button_sprites(&self) -> Result<[Sprite; 3]> {
+        let sprite = self.sprite.as_ref().or_fail()?;
+        let region = Size::from_wh(24, 24).to_region().move_y(32).move_x(48);
+        Ok([
+            sprite.clip(region).or_fail()?,
+            sprite.clip(region.shift_x(1)).or_fail()?,
+            sprite.clip(region.shift_x(2)).or_fail()?,
+        ])
+    }
 }
 
 fn decode_sprite(png: &[u8]) -> Result<Sprite> {
