@@ -64,9 +64,13 @@ impl Window {
         let sprite = self.assets.header_sprite().or_fail()?;
         canvas.draw_sprite(&sprite);
 
-        let elapsed = std::cmp::min(999, model.elapsed_time().as_secs()) as u32;
+        let elapsed = std::cmp::min(999, model.elapsed_time().as_secs()) as usize;
         let offset = Position::from_xy(24 + 10 * 2, 5);
         self.render_number(canvas, offset, elapsed).or_fail()?;
+
+        let offset = Position::from_xy(84 + 10, 5);
+        self.render_number(canvas, offset, model.remaining_mines())
+            .or_fail()?;
 
         Ok(())
     }
@@ -75,13 +79,13 @@ impl Window {
         &self,
         canvas: &mut Canvas,
         mut offset: Position,
-        mut number: u32,
+        mut number: usize,
     ) -> Result<()> {
         let sprites = self.assets.digit_sprites().or_fail()?;
         let mut first = true;
         while number > 0 || first {
             let digit = number % 10;
-            let sprite = &sprites[digit as usize];
+            let sprite = &sprites[digit];
             canvas.offset(offset).draw_sprite(sprite);
             offset.x -= 10;
             number /= 10;

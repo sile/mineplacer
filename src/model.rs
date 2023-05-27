@@ -17,6 +17,7 @@ const BOARD_SIZE: Size = Size::from_wh(WIDTH as u32, HEIGHT as u32);
 pub struct Model {
     rng: StdRng,
     board: Board,
+    remaining_mines: usize,
     start_time: Duration,
     elapsed_time: Duration,
 }
@@ -42,7 +43,12 @@ impl Model {
         }
 
         self.start_time = system.clock_game_time();
+        self.remaining_mines = MINES;
         Ok(())
+    }
+
+    pub fn remaining_mines(&self) -> usize {
+        self.remaining_mines
     }
 
     pub fn update_elapsed_time<S: System>(&mut self, system: &S) {
@@ -58,15 +64,25 @@ impl Model {
             .map(|p| (p, self.board.surrounding_mines(p)))
     }
 
-    pub fn handle_click(&mut self, position: Position) -> Result<()> {
+    pub fn handle_click(&mut self, position: Position) -> Result<bool> {
         Size::from_wh(WIDTH as u32, HEIGHT as u32)
             .contains(&position)
             .or_fail()?;
 
         let cell = &mut self.board.cells[position.y as usize][position.x as usize];
-        cell.actual_mine = !cell.actual_mine;
 
-        Ok(())
+        if !cell.actual_mine && self.remaining_mines == 0 {
+            return Ok(false);
+        }
+
+        cell.actual_mine = !cell.actual_mine;
+        if cell.actual_mine {
+            self.remaining_mines -= 1;
+        } else {
+            self.remaining_mines += 1;
+        }
+
+        Ok(true)
     }
 
     pub fn has_mine(&self, p: Position) -> bool {
