@@ -5,6 +5,7 @@ use pagurus::image::{Canvas, Color};
 use pagurus::{
     event::Event, failure::OrFail, fixed_window::FixedWindow, video::VideoFrame, Result, System,
 };
+use std::collections::VecDeque;
 use std::time::Duration;
 
 #[cfg(target_arch = "wasm32")]
@@ -19,6 +20,7 @@ pub struct Game {
     fixed_window: FixedWindow,
     window: Window,
     model: Model,
+    action_queue: VecDeque<Action>,
 }
 
 impl Game {
@@ -69,6 +71,27 @@ impl<S: System> pagurus::Game<S> for Game {
                 self.window.handle_event(event, &mut self.model).or_fail()?;
             }
         }
+        if self.window.take_help_button_clicked() {
+            self.action_queue.push_back(Action::OpenHelp);
+        }
+
         Ok(true)
     }
+
+    fn query(&mut self, _system: &mut S, name: &str) -> Result<Vec<u8>> {
+        match name {
+            "nextAction" => {
+                if let Some(action) = self.action_queue.pop_front() {
+                    return Ok(serde_json::to_vec(&action).or_fail()?);
+                }
+            }
+            _ => pagurus::todo!(),
+        }
+        Ok(vec![])
+    }
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub enum Action {
+    OpenHelp,
 }

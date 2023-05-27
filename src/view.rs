@@ -147,7 +147,12 @@ impl Window {
         self.start_8x15_button.handle_event(&event).or_fail()?;
         self.start_16x30_button.handle_event(&event).or_fail()?;
         self.help_button.handle_event(&event).or_fail()?;
+
         Ok(())
+    }
+
+    pub fn take_help_button_clicked(&mut self) -> bool {
+        self.help_button.take_clicked()
     }
 
     fn handle_mouse_event(&mut self, event: &MouseEvent, model: &mut Model) -> Result<()> {

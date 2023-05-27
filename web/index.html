@@ -6,7 +6,7 @@
   <body style="background-color:black">
     <canvas id="canvas" style="background-color:black; padding:0; margin:auto; display:block"></canvas>
     <script src="https://cdn.jsdelivr.net/npm/pagurus@0.6.7/dist/pagurus.min.js"></script>
-    <!--script src="/pagurus_web/dist/pagurus.js"></script--!>
+    <!-- TODO: script src="/pagurus_web/dist/pagurus.js"></script--!>
     <script>
       Pagurus.Game.load("game.wasm").then(async game => {
           const canvas = document.getElementById("canvas");
@@ -26,8 +26,17 @@
               if (!game.handleEvent(system, event)) {
                   break;
               }
+
+              const actionBytes = game.query(system, "nextAction");
+              if (actionBytes.length > 0) {
+                  const actionJson = JSON.parse(new TextDecoder("utf-8").decode(actionBytes));
+                  switch (actionJson) {
+                      case "OpenHelp":
+                          window.open("https://github.com/sile/prepare_for_minesweeper/", "_blank");
+                          break;
+                  }
+              }
           }
-          alert("Exited the game");
       });
     </script>
   </body>
