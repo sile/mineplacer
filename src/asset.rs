@@ -2,18 +2,17 @@ use pagurus::{failure::OrFail, image::Sprite, spatial::Size, Result};
 
 #[derive(Debug, Default)]
 pub struct Assets {
-    sprite: Option<Sprite>,
+    sprite: Sprite,
 }
 
 impl Assets {
     pub fn load(&mut self) -> Result<()> {
-        self.sprite = Some(decode_sprite(include_bytes!("../assets/ui.png")).or_fail()?);
-
+        self.sprite = decode_sprite(include_bytes!("../assets/ui.png")).or_fail()?;
         Ok(())
     }
 
     pub fn cell_sprites(&self) -> Result<CellSprites> {
-        let sprite = self.sprite.as_ref().or_fail()?;
+        let sprite = &self.sprite;
         let region = Size::square(16).to_region();
         Ok(CellSprites {
             over: sprite.clip(region.shift_x(1)).or_fail()?,
@@ -36,13 +35,13 @@ impl Assets {
     }
 
     pub fn header_sprite(&self) -> Result<Sprite> {
-        let sprite = self.sprite.as_ref().or_fail()?;
+        let sprite = &self.sprite;
         let region = Size::from_wh(16 * 16, 24).to_region().move_y(64);
         sprite.clip(region).or_fail()
     }
 
     pub fn digit_sprites(&self) -> Result<[Sprite; 10]> {
-        let sprite = self.sprite.as_ref().or_fail()?;
+        let sprite = &self.sprite;
         let region = Size::from_wh(8, 16).to_region().move_x(64);
         Ok([
             sprite.clip(region.shift_x(1)).or_fail()?,
@@ -59,7 +58,7 @@ impl Assets {
     }
 
     pub fn button_sprites(&self) -> Result<[Sprite; 3]> {
-        let sprite = self.sprite.as_ref().or_fail()?;
+        let sprite = &self.sprite;
         let region = Size::from_wh(24, 24).to_region().move_y(32).move_x(48);
         Ok([
             sprite.clip(region).or_fail()?,

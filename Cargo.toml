@@ -13,3 +13,7 @@ log = "0.4.17"
 pagurus = { version = "0.6.3", features = ["fixed_window", "random", "image", "wasm"]}
 png = "0.17.8"
 rand = "0.8.5"
+
+# TODO: remove
+[patch.crates-io]
+pagurus = { path = "../pagurus/" }

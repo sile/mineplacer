@@ -21,7 +21,7 @@ pub struct Window {
 }
 
 impl Window {
-    pub const MARGIN_SIZE: u32 = 4;
+    pub const MARGIN_SIZE: u32 = 3;
     pub const CELL_SIZE: u32 = 16;
     pub const HEADER_SIZE: Size = Size::from_wh(Self::CELL_SIZE * 16, 24);
     pub const BOARD_SIZE: Size = Size::from_wh(Self::CELL_SIZE * 16, Self::CELL_SIZE * 30);
@@ -189,7 +189,7 @@ impl Window {
 #[derive(Debug, Default)]
 pub struct Button {
     region: Region,
-    sprite: Option<Sprite>,
+    sprite: Sprite,
     state: ButtonState,
 }
 
@@ -197,13 +197,12 @@ impl Button {
     pub fn new(region: Region, sprite: Sprite) -> Self {
         Self {
             region,
-            sprite: Some(sprite),
+            sprite,
             state: ButtonState::Normal,
         }
     }
 
     pub fn render(&self, canvas: &mut Canvas) -> Result<()> {
-        let sprite = self.sprite.as_ref().or_fail()?;
         let mut region = self.region;
         match self.state {
             ButtonState::Normal => {}
@@ -216,7 +215,7 @@ impl Button {
                 region.size.height -= 2;
             }
         };
-        canvas.subregion(region).draw_sprite(sprite);
+        canvas.subregion(region).draw_sprite(&self.sprite);
         Ok(())
     }
 
