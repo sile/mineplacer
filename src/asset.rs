@@ -35,12 +35,10 @@ impl Assets {
         })
     }
 
-    pub fn sprite_cell_close(&self) -> Result<Sprite> {
-        self.sprite
-            .as_ref()
-            .or_fail()?
-            .clip(Size::square(16).to_region())
-            .or_fail()
+    pub fn header_sprite(&self) -> Result<Sprite> {
+        let sprite = self.sprite.as_ref().or_fail()?;
+        let region = Size::from_wh(16 * 16, 24).to_region().move_y(64);
+        sprite.clip(region).or_fail()
     }
 }
 

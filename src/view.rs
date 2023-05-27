@@ -18,9 +18,9 @@ pub struct Window {
 }
 
 impl Window {
-    pub const MARGIN_SIZE: u32 = 8;
+    pub const MARGIN_SIZE: u32 = 4;
     pub const CELL_SIZE: u32 = 16;
-    pub const HEADER_SIZE: Size = Size::from_wh(Self::CELL_SIZE * 16, 48);
+    pub const HEADER_SIZE: Size = Size::from_wh(Self::CELL_SIZE * 16, 24);
     pub const BOARD_SIZE: Size = Size::from_wh(Self::CELL_SIZE * 16, Self::CELL_SIZE * 30);
     pub const WINDOW_SIZE: Size = Size::from_wh(
         Self::BOARD_SIZE.width + Self::MARGIN_SIZE * 2,
@@ -61,24 +61,15 @@ impl Window {
     }
 
     fn render_header(&self, canvas: &mut Canvas) -> Result<()> {
-        canvas.fill_color(Color::WHITE);
+        let sprite = self.assets.header_sprite().or_fail()?;
+        canvas.draw_sprite(&sprite);
         Ok(())
     }
 
     fn render_board(&self, canvas: &mut Canvas, model: &Model) -> Result<()> {
         canvas.fill_color(Color::WHITE);
 
-        let cell_close_sprite = self.assets.sprite_cell_close().or_fail()?;
         let cell_region = Size::square(Self::CELL_SIZE).to_region();
-        for y in 0..30 {
-            for x in 0..16 {
-                let cell_region = cell_region.shift_x(x).shift_y(y);
-                canvas
-                    .offset(cell_region.position)
-                    .draw_sprite(&cell_close_sprite);
-            }
-        }
-
         let sprite = self.assets.cell_sprites().or_fail()?;
         for (position, mines) in model.surrounding_mines() {
             let cell_region = cell_region.shift_x(position.x).shift_y(position.y);
