@@ -2,7 +2,7 @@ use crate::{asset::Assets, model::Model};
 use pagurus::{
     event::{Event, MouseEvent},
     failure::OrFail,
-    image::{Canvas, Color},
+    image::{Canvas, Color, Sprite},
     spatial::{Contains, Position, Region, Size},
     Result,
 };
@@ -166,4 +166,60 @@ impl Window {
 
         Ok(())
     }
+}
+
+#[derive(Debug, Default)]
+pub struct Button {
+    region: Region,
+    sprite: Option<Sprite>,
+    state: ButtonState,
+}
+
+impl Button {
+    pub fn new(region: Region, sprite: Sprite) -> Self {
+        Self {
+            region,
+            sprite: Some(sprite),
+            state: ButtonState::Normal,
+        }
+    }
+
+    pub fn render(&self, canvas: &mut Canvas) -> Result<()> {
+        // let sprite = match self.state {
+        //     ButtonState::Normal => &self.sprite.normal,
+        //     ButtonState::Hover => &self.sprite.hover,
+        //     ButtonState::Pressed => &self.sprite.pressed,
+        //     ButtonState::Clicked => &self.sprite.clicked,
+        // };
+        // canvas.draw_sprite(sprite);
+        Ok(())
+    }
+
+    pub fn handle_event(&mut self, event: &Event) -> Result<()> {
+        // match event {
+        //     Event::Mouse(event) => {
+        //         self.handle_mouse_event(event).or_fail()?;
+        //     }
+        //     _ => {}
+        // }
+        Ok(())
+    }
+
+    pub fn take_clicked(&mut self) -> bool {
+        if self.state == ButtonState::Clicked {
+            self.state = ButtonState::Normal;
+            true
+        } else {
+            false
+        }
+    }
+}
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+pub enum ButtonState {
+    #[default]
+    Normal,
+    Hover,
+    Pressed,
+    Clicked,
 }
