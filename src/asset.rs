@@ -40,6 +40,23 @@ impl Assets {
         let region = Size::from_wh(16 * 16, 24).to_region().move_y(64);
         sprite.clip(region).or_fail()
     }
+
+    pub fn digit_sprites(&self) -> Result<[Sprite; 10]> {
+        let sprite = self.sprite.as_ref().or_fail()?;
+        let region = Size::from_wh(8, 16).to_region().move_x(64);
+        Ok([
+            sprite.clip(region.shift_x(1)).or_fail()?,
+            sprite.clip(region.shift_x(3)).or_fail()?,
+            sprite.clip(region.shift_x(5)).or_fail()?,
+            sprite.clip(region.shift_x(7)).or_fail()?,
+            sprite.clip(region.shift_x(9)).or_fail()?,
+            sprite.clip(region.shift_x(1).shift_y(1)).or_fail()?,
+            sprite.clip(region.shift_x(3).shift_y(1)).or_fail()?,
+            sprite.clip(region.shift_x(5).shift_y(1)).or_fail()?,
+            sprite.clip(region.shift_x(7).shift_y(1)).or_fail()?,
+            sprite.clip(region.shift_x(9).shift_y(1)).or_fail()?,
+        ])
+    }
 }
 
 fn decode_sprite(png: &[u8]) -> Result<Sprite> {

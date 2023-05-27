@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use pagurus::{
     failure::OrFail,
     random::StdRng,
@@ -15,6 +17,8 @@ const BOARD_SIZE: Size = Size::from_wh(WIDTH as u32, HEIGHT as u32);
 pub struct Model {
     rng: StdRng,
     board: Board,
+    start_time: Duration,
+    elapsed_time: Duration,
 }
 
 impl Model {
@@ -23,7 +27,7 @@ impl Model {
         Ok(())
     }
 
-    pub fn generate_board(&mut self) -> Result<()> {
+    pub fn generate_board<S: System>(&mut self, system: &mut S) -> Result<()> {
         self.board = Board::default();
         let mut mines = [0; WIDTH * HEIGHT];
         for p in self.positions() {
@@ -36,7 +40,17 @@ impl Model {
             let x = i % WIDTH;
             self.board.cells[y][x].expected_mine = true;
         }
+
+        self.start_time = system.clock_game_time();
         Ok(())
+    }
+
+    pub fn update_elapsed_time<S: System>(&mut self, system: &S) {
+        self.elapsed_time = system.clock_game_time() - self.start_time;
+    }
+
+    pub fn elapsed_time(&self) -> Duration {
+        self.elapsed_time
     }
 
     pub fn surrounding_mines(&self) -> impl '_ + Iterator<Item = (Position, isize)> {

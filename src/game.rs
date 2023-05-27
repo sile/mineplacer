@@ -23,6 +23,8 @@ pub struct Game {
 
 impl Game {
     fn render<S: System>(&mut self, system: &mut S) -> Result<()> {
+        self.model.update_elapsed_time(system);
+
         let mut canvas = Canvas::new(&mut self.video_frame);
         canvas.fill_color(Color::BLACK);
         self.window
@@ -42,7 +44,7 @@ impl<S: System> pagurus::Game<S> for Game {
         self.window.load_assets().or_fail()?;
         self.model.initialize(system).or_fail()?;
 
-        self.model.generate_board().or_fail()?;
+        self.model.generate_board(system).or_fail()?;
 
         system.clock_set_timeout(tag::RENDERING_TIMEOUT, RENDER_TIMEOUT_DURATION);
         Ok(())

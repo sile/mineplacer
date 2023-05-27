@@ -50,7 +50,7 @@ impl Window {
         canvas.fill_color(BACKGROUND_COLOR);
 
         let header_region = self.header_region();
-        self.render_header(&mut canvas.subregion(header_region))
+        self.render_header(&mut canvas.subregion(header_region), model)
             .or_fail()?;
 
         let board_region = self.board_region();
@@ -60,9 +60,33 @@ impl Window {
         Ok(())
     }
 
-    fn render_header(&self, canvas: &mut Canvas) -> Result<()> {
+    fn render_header(&self, canvas: &mut Canvas, model: &Model) -> Result<()> {
         let sprite = self.assets.header_sprite().or_fail()?;
         canvas.draw_sprite(&sprite);
+
+        let elapsed = std::cmp::min(999, model.elapsed_time().as_secs()) as u32;
+        let offset = Position::from_xy(24 + 10 * 2, 5);
+        self.render_number(canvas, offset, elapsed).or_fail()?;
+
+        Ok(())
+    }
+
+    fn render_number(
+        &self,
+        canvas: &mut Canvas,
+        mut offset: Position,
+        mut number: u32,
+    ) -> Result<()> {
+        let sprites = self.assets.digit_sprites().or_fail()?;
+        let mut first = true;
+        while number > 0 || first {
+            let digit = number % 10;
+            let sprite = &sprites[digit as usize];
+            canvas.offset(offset).draw_sprite(sprite);
+            offset.x -= 10;
+            number /= 10;
+            first = false;
+        }
         Ok(())
     }
 
