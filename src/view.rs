@@ -167,6 +167,14 @@ impl Window {
         self.help_button.take_clicked()
     }
 
+    pub fn take_start_8x15_button_clicked(&mut self) -> bool {
+        self.start_8x15_button.take_clicked()
+    }
+
+    pub fn take_start_16x30_button_clicked(&mut self) -> bool {
+        self.start_16x30_button.take_clicked()
+    }
+
     fn handle_mouse_event(&mut self, event: &MouseEvent, model: &mut Model) -> Result<()> {
         let pixel_position = event.position();
         self.focus_cell = None;

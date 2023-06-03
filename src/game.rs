@@ -67,12 +67,25 @@ impl<S: System> pagurus::Game<S> for Game {
                 self.render(system).or_fail()?;
                 system.clock_set_timeout(tag::RENDERING_TIMEOUT, RENDER_TIMEOUT_DURATION);
             }
+            Event::Timeout(TimeoutEvent {
+                tag: tag::START_16X30_TIMEOUT,
+                ..
+            }) => {
+                self.model.generate_board(system).or_fail()?;
+                self.render(system).or_fail()?;
+            }
             _ => {
                 self.window.handle_event(event, &mut self.model).or_fail()?;
             }
         }
         if self.window.take_help_button_clicked() {
             self.action_queue.push_back(Action::OpenHelp);
+        }
+        if self.window.take_start_8x15_button_clicked() {
+            system.clock_set_timeout(tag::START_8X15_TIMEOUT, Duration::from_secs(0));
+        }
+        if self.window.take_start_16x30_button_clicked() {
+            system.clock_set_timeout(tag::START_16X30_TIMEOUT, Duration::from_secs(0));
         }
 
         Ok(true)
