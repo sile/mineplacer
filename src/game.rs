@@ -1,3 +1,4 @@
+use crate::model::Level;
 use crate::tag;
 use crate::{model::Model, view::Window};
 use pagurus::event::{TimeoutEvent, WindowEvent};
@@ -46,9 +47,8 @@ impl<S: System> pagurus::Game<S> for Game {
         self.window.load_assets().or_fail()?;
         self.model.initialize(system).or_fail()?;
 
-        self.model.generate_board(system).or_fail()?;
-
         system.clock_set_timeout(tag::RENDERING_TIMEOUT, RENDER_TIMEOUT_DURATION);
+        system.clock_set_timeout(tag::START_16X30_TIMEOUT, Duration::from_secs(0));
         Ok(())
     }
 
@@ -68,10 +68,17 @@ impl<S: System> pagurus::Game<S> for Game {
                 system.clock_set_timeout(tag::RENDERING_TIMEOUT, RENDER_TIMEOUT_DURATION);
             }
             Event::Timeout(TimeoutEvent {
+                tag: tag::START_8X15_TIMEOUT,
+                ..
+            }) => {
+                self.model.start_game(system, Level::Small).or_fail()?;
+                self.render(system).or_fail()?;
+            }
+            Event::Timeout(TimeoutEvent {
                 tag: tag::START_16X30_TIMEOUT,
                 ..
             }) => {
-                self.model.generate_board(system).or_fail()?;
+                self.model.start_game(system, Level::Large).or_fail()?;
                 self.render(system).or_fail()?;
             }
             _ => {

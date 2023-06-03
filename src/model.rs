@@ -1,5 +1,3 @@
-use std::time::Duration;
-
 use pagurus::{
     failure::OrFail,
     random::StdRng,
@@ -7,11 +5,37 @@ use pagurus::{
     Result, System,
 };
 use rand::seq::SliceRandom;
+use std::time::Duration;
 
-const MINES: usize = 99;
-const WIDTH: usize = 16;
-const HEIGHT: usize = 30;
-const BOARD_SIZE: Size = Size::from_wh(WIDTH as u32, HEIGHT as u32);
+#[derive(Debug, Default, Clone, Copy)]
+pub enum Level {
+    Small,
+    #[default]
+    Large,
+}
+
+impl Level {
+    fn mines(self) -> usize {
+        match self {
+            Level::Small => 15,
+            Level::Large => 99,
+        }
+    }
+
+    fn width(self) -> usize {
+        match self {
+            Level::Small => 8,
+            Level::Large => 16,
+        }
+    }
+
+    fn height(self) -> usize {
+        match self {
+            Level::Small => 15,
+            Level::Large => 30,
+        }
+    }
+}
 
 #[derive(Debug, Default, Clone)]
 pub struct Model {
@@ -20,6 +44,7 @@ pub struct Model {
     remaining_mines: usize,
     start_time: Duration,
     elapsed_time: Duration,
+    level: Level,
 }
 
 impl Model {
@@ -28,22 +53,27 @@ impl Model {
         Ok(())
     }
 
-    pub fn generate_board<S: System>(&mut self, system: &mut S) -> Result<()> {
+    pub fn start_game<S: System>(&mut self, system: &mut S, level: Level) -> Result<()> {
+        self.level = level;
         self.board = Board::default();
-        let mut mines = [0; WIDTH * HEIGHT];
+
+        self.board.cells = vec![vec![Cell::default(); level.width()]; level.height()];
+        self.board.size = Size::from_wh(level.width() as u32, level.height() as u32);
+
+        let mut mines = vec![0; level.width() * level.height()];
         for p in self.positions() {
-            let i = p.y as usize * WIDTH as usize + p.x as usize;
+            let i = p.y as usize * level.width() as usize + p.x as usize;
             mines[i] = i;
         }
         mines.shuffle(&mut self.rng);
-        for i in &mines[0..MINES] {
-            let y = i / WIDTH;
-            let x = i % WIDTH;
+        for i in &mines[0..level.mines()] {
+            let y = i / level.width();
+            let x = i % level.width();
             self.board.cells[y][x].expected_mine = true;
         }
 
         self.start_time = system.clock_game_time();
-        self.remaining_mines = MINES;
+        self.remaining_mines = level.mines();
         Ok(())
     }
 
@@ -65,9 +95,7 @@ impl Model {
     }
 
     pub fn handle_click(&mut self, position: Position) -> Result<bool> {
-        Size::from_wh(WIDTH as u32, HEIGHT as u32)
-            .contains(&position)
-            .or_fail()?;
+        self.board.size.contains(&position).or_fail()?;
 
         let cell = &mut self.board.cells[position.y as usize][position.x as usize];
 
@@ -90,13 +118,14 @@ impl Model {
     }
 
     fn positions(&self) -> impl '_ + Iterator<Item = Position> {
-        (0..HEIGHT).flat_map(|y| (0..WIDTH).map(move |x| Position::from_xy(x as i32, y as i32)))
+        self.board.size.to_region().iter()
     }
 }
 
 #[derive(Debug, Default, Clone)]
 struct Board {
-    cells: [[Cell; WIDTH]; HEIGHT],
+    cells: Vec<Vec<Cell>>,
+    size: Size,
 }
 
 impl Board {
@@ -106,7 +135,7 @@ impl Board {
         for y_delta in [-1, 0, 1] {
             for x_delta in [-1, 0, 1] {
                 let p = p.move_y(y_delta).move_x(x_delta);
-                if !BOARD_SIZE.to_region().contains(&p) {
+                if !self.size.to_region().contains(&p) {
                     continue;
                 }
 
