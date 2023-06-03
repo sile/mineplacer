@@ -118,19 +118,31 @@ impl Window {
             let cell_region = cell_region.shift_x(position.x).shift_y(position.y);
             let mut canvas = canvas.offset(cell_region.position);
 
-            if mines >= 0 {
-                canvas.draw_sprite(&sprite.over);
+            if mines <= 0 {
+                canvas.draw_sprite(&sprite.just);
             } else {
-                canvas.draw_sprite(&sprite.under);
+                canvas.draw_sprite(&sprite.over);
             }
 
             if model.has_mine(position) {
                 canvas.draw_sprite(&sprite.mine);
-            } else {
-                canvas.draw_sprite(&sprite.numbers[mines.abs() as usize]);
-                if self.focus_cell == Some(position) && mines > 0 {
-                    canvas.draw_sprite(&sprite.focus);
+
+                let mut canvas = canvas.offset(Position::from_xy(8, 8));
+                if mines > 0 {
+                    canvas.draw_sprite(&sprite.mini_numbers[mines as usize - 1]);
+                } else if mines < 0 {
+                    canvas.draw_sprite(&sprite.mini_warning);
                 }
+            } else {
+                if mines > 0 {
+                    canvas.draw_sprite(&sprite.numbers[mines as usize - 1]);
+                } else if mines < 0 {
+                    canvas.draw_sprite(&sprite.warning);
+                }
+            }
+
+            if self.focus_cell == Some(position) {
+                canvas.draw_sprite(&sprite.focus);
             }
         }
 

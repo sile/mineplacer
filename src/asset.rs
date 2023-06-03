@@ -14,22 +14,35 @@ impl Assets {
     pub fn cell_sprites(&self) -> Result<CellSprites> {
         let sprite = &self.sprite;
         let region = Size::square(16).to_region();
+        let mini_region = Size::square(8).to_region().move_y(48);
         Ok(CellSprites {
+            just: sprite.clip(region).or_fail()?,
             over: sprite.clip(region.shift_x(1)).or_fail()?,
             mine: sprite.clip(region.shift_x(2)).or_fail()?,
+            mine_alpha: sprite.clip(region.shift_x(4)).or_fail()?,
             focus: sprite.clip(region.shift_x(3)).or_fail()?,
-            under: sprite.clip(region.shift_y(1).shift_x(3)).or_fail()?,
+            warning: sprite.clip(region.shift_y(1).shift_x(0)).or_fail()?,
             numbers: [
-                sprite.clip(region).or_fail()?,
-                sprite.clip(region.shift_y(1).shift_x(0)).or_fail()?,
                 sprite.clip(region.shift_y(1).shift_x(1)).or_fail()?,
                 sprite.clip(region.shift_y(1).shift_x(2)).or_fail()?,
+                sprite.clip(region.shift_y(1).shift_x(3)).or_fail()?,
+                sprite.clip(region.shift_y(1).shift_x(4)).or_fail()?,
                 sprite.clip(region.shift_y(2).shift_x(0)).or_fail()?,
                 sprite.clip(region.shift_y(2).shift_x(1)).or_fail()?,
                 sprite.clip(region.shift_y(2).shift_x(2)).or_fail()?,
-                sprite.clip(region.shift_y(3).shift_x(0)).or_fail()?,
-                sprite.clip(region.shift_y(3).shift_x(1)).or_fail()?,
-                sprite.clip(region.shift_y(3).shift_x(2)).or_fail()?,
+                sprite.clip(region.shift_y(2).shift_x(3)).or_fail()?,
+                sprite.clip(region.shift_y(2).shift_x(4)).or_fail()?,
+            ],
+            mini_warning: sprite.clip(mini_region).or_fail()?,
+            mini_numbers: [
+                sprite.clip(mini_region.shift_x(1)).or_fail()?,
+                sprite.clip(mini_region.shift_x(2)).or_fail()?,
+                sprite.clip(mini_region.shift_x(3)).or_fail()?,
+                sprite.clip(mini_region.shift_x(4)).or_fail()?,
+                sprite.clip(mini_region.shift_x(5)).or_fail()?,
+                sprite.clip(mini_region.shift_x(6)).or_fail()?,
+                sprite.clip(mini_region.shift_x(7)).or_fail()?,
+                sprite.clip(mini_region.shift_x(8)).or_fail()?,
             ],
         })
     }
@@ -42,7 +55,7 @@ impl Assets {
 
     pub fn digit_sprites(&self) -> Result<[Sprite; 10]> {
         let sprite = &self.sprite;
-        let region = Size::from_wh(8, 16).to_region().move_x(64);
+        let region = Size::from_wh(8, 16).to_region().move_x(80);
         Ok([
             sprite.clip(region.shift_x(1)).or_fail()?,
             sprite.clip(region.shift_x(3)).or_fail()?,
@@ -59,7 +72,7 @@ impl Assets {
 
     pub fn button_sprites(&self) -> Result<[Sprite; 3]> {
         let sprite = &self.sprite;
-        let region = Size::from_wh(24, 24).to_region().move_y(32).move_x(48);
+        let region = Size::from_wh(24, 24).to_region().move_y(32).move_x(80);
         Ok([
             sprite.clip(region).or_fail()?,
             sprite.clip(region.shift_x(1)).or_fail()?,
@@ -102,8 +115,12 @@ fn decode_sprite(png: &[u8]) -> Result<Sprite> {
 #[derive(Debug)]
 pub struct CellSprites {
     pub over: Sprite,
-    pub under: Sprite,
+    pub warning: Sprite,
+    pub mini_warning: Sprite,
+    pub just: Sprite,
     pub mine: Sprite,
+    pub mine_alpha: Sprite,
     pub focus: Sprite,
-    pub numbers: [Sprite; 10],
+    pub numbers: [Sprite; 9],
+    pub mini_numbers: [Sprite; 8],
 }
