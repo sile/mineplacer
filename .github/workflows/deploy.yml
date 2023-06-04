@@ -29,6 +29,7 @@ jobs:
           mkdir _site/
           cp target/wasm32-unknown-unknown/release/mineplacer.wasm _site/game.wasm
           cp web/index.html _site/
+          cp web/*.jpg _site/
       - name: Upload GitHub Pages artifacts
         uses: actions/upload-pages-artifact@v1
 
