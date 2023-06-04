@@ -48,7 +48,6 @@ impl<S: System> pagurus::Game<S> for Game {
         self.model.initialize(system).or_fail()?;
 
         system.clock_set_timeout(tag::RENDERING_TIMEOUT, RENDER_TIMEOUT_DURATION);
-        system.clock_set_timeout(tag::START_16X30_TIMEOUT, Duration::from_secs(0));
         Ok(())
     }
 

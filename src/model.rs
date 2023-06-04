@@ -46,6 +46,16 @@ impl Level {
     }
 }
 
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+pub enum State {
+    #[default]
+    Initial,
+    Playing,
+    Won {
+        elapsed_time: Duration,
+    },
+}
+
 #[derive(Debug, Default, Clone)]
 pub struct Model {
     rng: StdRng,
@@ -54,11 +64,13 @@ pub struct Model {
     start_time: Duration,
     elapsed_time: Duration,
     level: Level,
+    state: State,
 }
 
 impl Model {
     pub fn initialize<S: System>(&mut self, system: &mut S) -> Result<()> {
         self.rng = StdRng::from_clock_seed(system.clock_unix_time());
+        self.board.region.size = Size::from_wh(WIDTH as u32, HEIGHT as u32);
         Ok(())
     }
 
@@ -78,7 +90,12 @@ impl Model {
 
         self.start_time = system.clock_game_time();
         self.remaining_mines = level.mines();
+        self.state = State::Playing;
         Ok(())
+    }
+
+    pub fn state(&self) -> State {
+        self.state
     }
 
     pub fn remaining_mines(&self) -> usize {
@@ -101,6 +118,9 @@ impl Model {
     }
 
     pub fn handle_click(&mut self, position: Position) {
+        if self.state != State::Playing {
+            return;
+        }
         if !self.board.region.contains(&position) {
             return;
         }
@@ -116,6 +136,12 @@ impl Model {
             self.remaining_mines -= 1;
         } else {
             self.remaining_mines += 1;
+        }
+
+        if self.remaining_mines == 0 && self.surrounding_mines().all(|(_, m)| m == 0) {
+            self.state = State::Won {
+                elapsed_time: self.elapsed_time(),
+            }
         }
     }
 

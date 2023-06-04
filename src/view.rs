@@ -1,4 +1,7 @@
-use crate::{asset::Assets, model::Model};
+use crate::{
+    asset::Assets,
+    model::{Model, State},
+};
 use pagurus::{
     event::{Event, MouseEvent},
     failure::OrFail,
@@ -77,7 +80,13 @@ impl Window {
         let sprite = self.assets.header_sprite().or_fail()?;
         canvas.draw_sprite(&sprite);
 
-        let elapsed = std::cmp::min(999, model.elapsed_time().as_secs()) as usize;
+        let elapsed_time = match model.state() {
+            State::Initial => return Ok(()),
+            State::Playing => model.elapsed_time(),
+            State::Won { elapsed_time } => elapsed_time,
+        };
+
+        let elapsed = std::cmp::min(999, elapsed_time.as_secs()) as usize;
         let offset = Position::from_xy(24 + 10 * 2, 5);
         self.render_number(canvas, offset, elapsed).or_fail()?;
 
