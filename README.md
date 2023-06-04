@@ -1,7 +1,8 @@
 Mineplacer
 ==========
 
-This is a game inspired by Minesweeper.
+This is a browser game inspired by Minesweeper.
+
 Prepare for the game of Minesweeper by placing mines!
 
 [Play!](https://sile.github.io/mineplacer/)
@@ -15,4 +16,4 @@ How to Play
 - :warning: mark indices there are too many mines around the cell.
 - The condition for winning is that all mines are placed in the correct positions.
 
-TODO: image
+![Mineplacer](web/image.jpg)
