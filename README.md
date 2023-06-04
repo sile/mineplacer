@@ -3,7 +3,7 @@ Mineplacer
 
 This is a browser game inspired by Minesweeper.
 
-Prepare for the game of Minesweeper by placing mines!
+You are the person preparing for a game of Minesweeper by placing mines!
 
 [Play!](https://sile.github.io/mineplacer/)
 
