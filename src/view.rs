@@ -108,8 +108,6 @@ impl Window {
     }
 
     fn render_board(&self, canvas: &mut Canvas, model: &Model) -> Result<()> {
-        canvas.fill_color(Color::WHITE);
-
         let cell_region = Size::square(Self::CELL_SIZE).to_region();
         let sprite = self.assets.cell_sprites().or_fail()?;
         for (position, mines) in model.surrounding_mines() {
@@ -182,7 +180,7 @@ impl Window {
             if self.board_region().contains(&pixel_position) {
                 let cell_pixel_position = pixel_position - self.board_region().start();
                 let cell_position = cell_pixel_position / Self::CELL_SIZE;
-                model.handle_click(cell_position).or_fail()?;
+                model.handle_click(cell_position);
             }
         }
 

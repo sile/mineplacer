@@ -1,11 +1,13 @@
 use pagurus::{
-    failure::OrFail,
     random::StdRng,
-    spatial::{Contains, Position, Size},
+    spatial::{Contains, Position, Region, Size},
     Result, System,
 };
 use rand::seq::SliceRandom;
 use std::time::Duration;
+
+const WIDTH: usize = 16;
+const HEIGHT: usize = 30;
 
 #[derive(Debug, Default, Clone, Copy)]
 pub enum Level {
@@ -35,6 +37,13 @@ impl Level {
             Level::Large => 30,
         }
     }
+
+    fn offset(self) -> Position {
+        match self {
+            Level::Small => Position::from_xy(4, 7),
+            Level::Large => Position::from_xy(0, 0),
+        }
+    }
 }
 
 #[derive(Debug, Default, Clone)]
@@ -56,20 +65,15 @@ impl Model {
     pub fn start_game<S: System>(&mut self, system: &mut S, level: Level) -> Result<()> {
         self.level = level;
         self.board = Board::default();
+        self.board.region = Region::new(
+            level.offset(),
+            Size::from_wh(level.width() as u32, level.height() as u32),
+        );
 
-        self.board.cells = vec![vec![Cell::default(); level.width()]; level.height()];
-        self.board.size = Size::from_wh(level.width() as u32, level.height() as u32);
-
-        let mut mines = vec![0; level.width() * level.height()];
-        for p in self.positions() {
-            let i = p.y as usize * level.width() as usize + p.x as usize;
-            mines[i] = i;
-        }
+        let mut mines = self.board.region.iter().collect::<Vec<_>>();
         mines.shuffle(&mut self.rng);
-        for i in &mines[0..level.mines()] {
-            let y = i / level.width();
-            let x = i % level.width();
-            self.board.cells[y][x].expected_mine = true;
+        for p in &mines[0..level.mines()] {
+            self.board.cells[p.y as usize][p.x as usize].expected_mine = true;
         }
 
         self.start_time = system.clock_game_time();
@@ -90,17 +94,21 @@ impl Model {
     }
 
     pub fn surrounding_mines(&self) -> impl '_ + Iterator<Item = (Position, isize)> {
-        self.positions()
+        self.board
+            .region
+            .iter()
             .map(|p| (p, self.board.surrounding_mines(p)))
     }
 
-    pub fn handle_click(&mut self, position: Position) -> Result<bool> {
-        self.board.size.contains(&position).or_fail()?;
+    pub fn handle_click(&mut self, position: Position) {
+        if !self.board.region.contains(&position) {
+            return;
+        }
 
         let cell = &mut self.board.cells[position.y as usize][position.x as usize];
 
         if !cell.actual_mine && self.remaining_mines == 0 {
-            return Ok(false);
+            return;
         }
 
         cell.actual_mine = !cell.actual_mine;
@@ -109,23 +117,17 @@ impl Model {
         } else {
             self.remaining_mines += 1;
         }
-
-        Ok(true)
     }
 
     pub fn has_mine(&self, p: Position) -> bool {
         self.board.cells[p.y as usize][p.x as usize].actual_mine
     }
-
-    fn positions(&self) -> impl '_ + Iterator<Item = Position> {
-        self.board.size.to_region().iter()
-    }
 }
 
 #[derive(Debug, Default, Clone)]
 struct Board {
-    cells: Vec<Vec<Cell>>,
-    size: Size,
+    cells: [[Cell; WIDTH]; HEIGHT],
+    region: Region,
 }
 
 impl Board {
@@ -135,7 +137,7 @@ impl Board {
         for y_delta in [-1, 0, 1] {
             for x_delta in [-1, 0, 1] {
                 let p = p.move_y(y_delta).move_x(x_delta);
-                if !self.size.to_region().contains(&p) {
+                if !self.region.contains(&p) {
                     continue;
                 }
 
