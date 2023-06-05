@@ -1,0 +1,27 @@
+{
+  "name": "Mineplacer",
+  "short_name": "Mineplacer",
+  "theme_color": "#c43f57",
+  "background_color": "#c43f57",
+  "display": "standalone",
+  "scope": "./",
+  "start_url": "./index.html",
+  "icons": [
+    {
+      "src": "icon-32x32.png",
+      "sizes": "32x32"
+    },
+    {
+      "src": "icon-64x64.png",
+      "sizes": "64x64"
+    },
+    {
+      "src": "icon-128x128.png",
+      "sizes": "128x128"
+    },
+    {
+      "src": "icon-256x256.png",
+      "sizes": "256x256"
+    }
+  ]
+}
