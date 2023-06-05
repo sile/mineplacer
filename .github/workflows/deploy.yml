@@ -31,6 +31,8 @@ jobs:
           cp web/index.html _site/
           cp web/*.jpg _site/
           cp web/*.png _site/
+          cp web/manifest.json _site/
+          cp web/sw.js _site/
       - name: Upload GitHub Pages artifacts
         uses: actions/upload-pages-artifact@v1
 
