@@ -1,7 +1,8 @@
 <html>
   <head prefix="og: http://ogp.me/ns#">
     <meta charset="utf-8">
-    <link rel="icon" type="image/png" href="https://sile.github.io/mineplacer/favicon.png" sizes="48x48" />
+    <link rel="icon" type="image/png" href="./favicon.png" sizes="48x48" />
+    <link rel="apple-touch-icon" href="./icon192x192.png" sizez="192x192" />
     <link rel="manifest" href="manifest.json">
 
     <meta property="og:title" content="Mineplacer" />
@@ -17,7 +18,9 @@
     <script src="https://cdn.jsdelivr.net/npm/pagurus@0.6.7/dist/pagurus.min.js"></script>
     <script>
       if ("serviceWorker" in navigator) {
-          await navigator.serviceWorker.register('./sw.js');
+          navigator.serviceWorker.register('./sw.js').catch((error) => {
+              console.log('Service worker registration failed:', error);
+          });
       }
 
       Pagurus.Game.load("game.wasm").then(async game => {
