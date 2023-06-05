@@ -10,6 +10,10 @@
     {
       "src": "favicon.png",
       "sizes": "48x48"
+    },
+    {
+      "src": "icon192x192.png",
+      "sizes": "192x192"
     }
   ]
 }
