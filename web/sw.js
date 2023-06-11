@@ -1,5 +1,5 @@
 const CACHE_NAME = 'mineplacer';
-const CACHE_VERSION = '0.1.0';
+const CACHE_VERSION = '0.2.0';
 const CACHE_KEY = `${CACHE_NAME}-${CACHE_VERSION}`;
 
 self.addEventListener('install', (e) => {
