@@ -80,6 +80,15 @@ impl<S: System> pagurus::Game<S> for Game {
                 self.model.start_game(system, Level::Large).or_fail()?;
                 self.render(system).or_fail()?;
             }
+            Event::Timeout(TimeoutEvent {
+                tag: tag::START_16X30_WITH_WORMHOLE_TIMEOUT,
+                ..
+            }) => {
+                self.model
+                    .start_game(system, Level::LargeWithWormhole)
+                    .or_fail()?;
+                self.render(system).or_fail()?;
+            }
             _ => {
                 self.window.handle_event(event, &mut self.model).or_fail()?;
             }
@@ -92,6 +101,12 @@ impl<S: System> pagurus::Game<S> for Game {
         }
         if self.window.take_start_16x30_button_clicked() {
             system.clock_set_timeout(tag::START_16X30_TIMEOUT, Duration::from_secs(0));
+        }
+        if self.window.take_start_16x30_with_wormhole_button_clicked() {
+            system.clock_set_timeout(
+                tag::START_16X30_WITH_WORMHOLE_TIMEOUT,
+                Duration::from_secs(0),
+            );
         }
 
         Ok(true)

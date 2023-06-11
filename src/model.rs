@@ -14,6 +14,7 @@ pub enum Level {
     Small,
     #[default]
     Large,
+    LargeWithWormhole,
 }
 
 impl Level {
@@ -21,6 +22,15 @@ impl Level {
         match self {
             Level::Small => 15,
             Level::Large => 99,
+            Level::LargeWithWormhole => 99,
+        }
+    }
+
+    fn wormholes(self) -> usize {
+        match self {
+            Level::Small => 0,
+            Level::Large => 0,
+            Level::LargeWithWormhole => 99,
         }
     }
 
@@ -28,6 +38,7 @@ impl Level {
         match self {
             Level::Small => 8,
             Level::Large => 16,
+            Level::LargeWithWormhole => 16,
         }
     }
 
@@ -35,6 +46,7 @@ impl Level {
         match self {
             Level::Small => 15,
             Level::Large => 30,
+            Level::LargeWithWormhole => 30,
         }
     }
 
@@ -42,6 +54,7 @@ impl Level {
         match self {
             Level::Small => Position::from_xy(4, 7),
             Level::Large => Position::from_xy(0, 0),
+            Level::LargeWithWormhole => Position::from_xy(0, 0),
         }
     }
 }
@@ -84,7 +97,10 @@ impl Model {
 
         let mut mines = self.board.region.iter().collect::<Vec<_>>();
         mines.shuffle(&mut self.rng);
-        for p in &mines[0..level.mines()] {
+        for p in &mines[..level.wormholes()] {
+            self.board.cells[p.y as usize][p.x as usize].wormhole = true;
+        }
+        for p in &mines[level.wormholes()..][..level.mines()] {
             self.board.cells[p.y as usize][p.x as usize].expected_mine = true;
         }
 
@@ -96,6 +112,10 @@ impl Model {
 
     pub fn state(&self) -> State {
         self.state
+    }
+
+    pub fn has_wormhole(&self, p: Position) -> bool {
+        self.board.cells[p.y as usize][p.x as usize].wormhole
     }
 
     pub fn remaining_mines(&self) -> usize {
@@ -122,6 +142,9 @@ impl Model {
             return;
         }
         if !self.board.region.contains(&position) {
+            return;
+        }
+        if self.has_wormhole(position) {
             return;
         }
 
@@ -184,4 +207,5 @@ impl Board {
 struct Cell {
     expected_mine: bool,
     actual_mine: bool,
+    wormhole: bool,
 }

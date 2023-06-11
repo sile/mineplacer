@@ -18,6 +18,7 @@ pub struct Window {
     help_button: Button,
     start_8x15_button: Button,
     start_16x30_button: Button,
+    start_16x30_with_wormhole_button: Button,
     pressing: bool,
 }
 
@@ -36,9 +37,12 @@ impl Window {
 
         let button_region =
             Region::new(self.header_region().position, Size::from_wh(20, 21)).move_y(1);
-        let [start_8x16, start_16x30, help] = self.assets.button_sprites().or_fail()?;
-        self.start_8x15_button = Button::new(button_region.move_x(165), start_8x16);
-        self.start_16x30_button = Button::new(button_region.move_x(191), start_16x30);
+        let [start_8x16, start_16x30, start_16x30_with_wormhole, help] =
+            self.assets.button_sprites().or_fail()?;
+        self.start_8x15_button = Button::new(button_region.move_x(145), start_8x16);
+        self.start_16x30_button = Button::new(button_region.move_x(169), start_16x30);
+        self.start_16x30_with_wormhole_button =
+            Button::new(button_region.move_x(193), start_16x30_with_wormhole);
         self.help_button = Button::new(button_region.move_x(232), help);
 
         Ok(())
@@ -68,6 +72,9 @@ impl Window {
         self.help_button.render(canvas).or_fail()?;
         self.start_8x15_button.render(canvas).or_fail()?;
         self.start_16x30_button.render(canvas).or_fail()?;
+        self.start_16x30_with_wormhole_button
+            .render(canvas)
+            .or_fail()?;
 
         let board_region = self.board_region();
         self.render_board(&mut canvas.subregion(board_region), model)
@@ -120,6 +127,10 @@ impl Window {
         let cell_region = Size::square(Self::CELL_SIZE).to_region();
         let sprite = self.assets.cell_sprites().or_fail()?;
         for (position, mines) in model.surrounding_mines() {
+            if model.has_wormhole(position) {
+                continue;
+            }
+
             let cell_region = cell_region.shift_x(position.x).shift_y(position.y);
             let mut canvas = canvas.offset(cell_region.position);
 
@@ -159,6 +170,9 @@ impl Window {
         }
         self.start_8x15_button.handle_event(&event).or_fail()?;
         self.start_16x30_button.handle_event(&event).or_fail()?;
+        self.start_16x30_with_wormhole_button
+            .handle_event(&event)
+            .or_fail()?;
         self.help_button.handle_event(&event).or_fail()?;
 
         Ok(())
@@ -174,6 +188,10 @@ impl Window {
 
     pub fn take_start_16x30_button_clicked(&mut self) -> bool {
         self.start_16x30_button.take_clicked()
+    }
+
+    pub fn take_start_16x30_with_wormhole_button_clicked(&mut self) -> bool {
+        self.start_16x30_with_wormhole_button.take_clicked()
     }
 
     fn handle_mouse_event(&mut self, event: &MouseEvent, model: &mut Model) -> Result<()> {

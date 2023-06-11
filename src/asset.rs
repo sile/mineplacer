@@ -70,12 +70,13 @@ impl Assets {
         ])
     }
 
-    pub fn button_sprites(&self) -> Result<[Sprite; 3]> {
+    pub fn button_sprites(&self) -> Result<[Sprite; 4]> {
         let sprite = &self.sprite;
         let region = Size::from_wh(24, 24).to_region().move_y(32).move_x(80);
         Ok([
             sprite.clip(region).or_fail()?,
             sprite.clip(region.shift_x(1)).or_fail()?,
+            sprite.clip(region.shift_x(3)).or_fail()?,
             sprite.clip(region.shift_x(2)).or_fail()?,
         ])
     }
