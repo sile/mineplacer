@@ -13,7 +13,7 @@ How to Play
 - Select a game level (8x15 or 16x30 or 16x30 with wormholes).
 - Click on a cell to place a mine there.
 - A digit in a cell indicates the number of mines that should be placed around the cell (including the cell itself).
-- :warning: mark indices there are too many mines around the cell.
+- :warning: mark indicates there are too many mines around the cell.
 - When wormholes exist, a part of non-mine cells are hidden.
 - The condition for winning is that all mines are placed in the correct positions.
 
