@@ -161,7 +161,12 @@ impl Model {
             self.remaining_mines += 1;
         }
 
-        if self.remaining_mines == 0 && self.surrounding_mines().all(|(_, m)| m == 0) {
+        if self.remaining_mines == 0
+            && self
+                .surrounding_mines()
+                .filter(|(p, _)| !self.has_wormhole(*p))
+                .all(|(_, m)| m == 0)
+        {
             self.state = State::Won {
                 elapsed_time: self.elapsed_time(),
             }
