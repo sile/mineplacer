@@ -17,7 +17,7 @@ How to Play
 - When wormholes exist, a part of non-mine cells are hidden.
 - The condition for winning is that all mines are placed in the correct positions.
 
-Enable Touch Gesture
+Enable Touch Gestures
 --------------------
 
 If the query string parameter `gesture=true` is provided, panning and pinch zoom gestures will be enabled.
