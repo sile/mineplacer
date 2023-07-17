@@ -219,6 +219,10 @@ impl Model {
         self.level.wormholes()
     }
 
+    pub fn mines(&self) -> usize {
+        self.level.mines()
+    }
+
     pub fn is_custom_mode(&self) -> bool {
         self.level.is_custom()
     }

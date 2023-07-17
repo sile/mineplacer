@@ -128,9 +128,13 @@ impl Window {
         canvas.draw_sprite(&sprite);
 
         if model.is_custom_mode() {
-            let offset = Position::from_xy(164, 5);
-            self.render_number(canvas, offset, model.wormholes())
+            self.render_number(canvas, Position::from_xy(164, 5), model.wormholes())
                 .or_fail()?;
+
+            if matches!(model.state(), State::Initial) {
+                self.render_number(canvas, Position::from_xy(84 + 20, 5), model.mines())
+                    .or_fail()?;
+            }
         }
 
         let elapsed_time = match model.state() {
