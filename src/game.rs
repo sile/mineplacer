@@ -124,7 +124,7 @@ impl<S: System> pagurus::Game<S> for Game {
         match name {
             "nextAction" => {
                 if let Some(action) = self.action_queue.pop_front() {
-                    return Ok(serde_json::to_vec(&action).or_fail()?);
+                    return serde_json::to_vec(&action).or_fail();
                 }
             }
             _ => pagurus::todo!(),

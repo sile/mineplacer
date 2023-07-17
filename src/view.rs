@@ -212,17 +212,16 @@ impl Window {
                 canvas.draw_sprite(&sprite.mine);
 
                 let mut canvas = canvas.offset(Position::from_xy(8, 8));
+                #[allow(clippy::comparison_chain)]
                 if mines > 0 {
                     canvas.draw_sprite(&sprite.mini_numbers[mines as usize - 1]);
                 } else if mines < 0 {
                     canvas.draw_sprite(&sprite.mini_warning);
                 }
-            } else {
-                if mines > 0 {
-                    canvas.draw_sprite(&sprite.numbers[mines as usize - 1]);
-                } else if mines < 0 {
-                    canvas.draw_sprite(&sprite.warning);
-                }
+            } else if mines > 0 {
+                canvas.draw_sprite(&sprite.numbers[mines as usize - 1]);
+            } else if mines < 0 {
+                canvas.draw_sprite(&sprite.warning);
             }
         }
 
@@ -230,11 +229,8 @@ impl Window {
     }
 
     pub fn handle_event(&mut self, event: Event, model: &mut Model) -> Result<()> {
-        match &event {
-            Event::Mouse(event) => {
-                self.handle_mouse_event(event, model).or_fail()?;
-            }
-            _ => {}
+        if let Event::Mouse(event) = &event {
+            self.handle_mouse_event(event, model).or_fail()?;
         }
         if model.is_custom_mode() {
             self.start_custom_button.handle_event(&event).or_fail()?;
