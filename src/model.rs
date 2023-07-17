@@ -212,7 +212,7 @@ impl Model {
     }
 
     pub fn board_size(&self) -> Size {
-        self.board.region.size
+        self.level.board_size()
     }
 
     pub fn wormholes(&self) -> usize {
