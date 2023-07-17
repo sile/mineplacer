@@ -36,6 +36,13 @@
           window.addEventListener('resize', resizeCanvas);
 
           game.initialize(system);
+          try {
+              const qs = new TextEncoder().encode(window.location.search)
+              game.command(system, "setQueryString", qs);
+          } catch (error) {
+              alert('[WARNING] ' + JSON.parse(error.message)['message'] + ' (custom mode is disabled)');
+          }
+
           while (true) {
               const event = await system.nextEvent();
               if (!game.handleEvent(system, event)) {

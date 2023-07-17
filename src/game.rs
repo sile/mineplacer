@@ -2,6 +2,7 @@ use crate::model::Level;
 use crate::tag;
 use crate::{model::Model, view::Window};
 use pagurus::event::{TimeoutEvent, WindowEvent};
+use pagurus::failure::Failure;
 use pagurus::image::{Canvas, Color};
 use pagurus::{
     event::Event, failure::OrFail, fixed_window::FixedWindow, video::VideoFrame, Result, System,
@@ -43,9 +44,9 @@ impl Game {
 
 impl<S: System> pagurus::Game<S> for Game {
     fn initialize(&mut self, system: &mut S) -> Result<()> {
-        self.fixed_window = FixedWindow::new(Window::WINDOW_SIZE);
-        self.window.load_assets().or_fail()?;
         self.model.initialize(system).or_fail()?;
+        self.window.load_assets(&self.model).or_fail()?;
+        self.fixed_window = FixedWindow::new(self.window.window_size(&self.model));
 
         system.clock_set_timeout(tag::RENDERING_TIMEOUT, RENDER_TIMEOUT_DURATION);
         Ok(())
@@ -108,6 +109,13 @@ impl<S: System> pagurus::Game<S> for Game {
                 Duration::from_secs(0),
             );
         }
+        if self.window.take_start_custom_button_clicked() {
+            // Reuse `START_16X30_WITH_WORMHOLE_TIMEOUT` tag for custom level
+            system.clock_set_timeout(
+                tag::START_16X30_WITH_WORMHOLE_TIMEOUT,
+                Duration::from_secs(0),
+            );
+        }
 
         Ok(true)
     }
@@ -122,6 +130,20 @@ impl<S: System> pagurus::Game<S> for Game {
             _ => pagurus::todo!(),
         }
         Ok(vec![])
+    }
+
+    fn command(&mut self, system: &mut S, name: &str, data: &[u8]) -> Result<()> {
+        match name {
+            "setQueryString" => {
+                let qs = std::str::from_utf8(data).or_fail()?;
+                let level = Level::from_qs(qs).or_fail()?;
+                self.model.set_custom_level(level);
+                self.fixed_window = FixedWindow::new(self.window.window_size(&self.model));
+                self.video_frame = VideoFrame::new(system.video_init(self.fixed_window.size()));
+                Ok(())
+            }
+            _ => Err(Failure::new().message(format!("unknown command: {name:?}"))),
+        }
     }
 }
 

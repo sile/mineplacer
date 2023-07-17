@@ -47,9 +47,10 @@ impl Assets {
         })
     }
 
-    pub fn header_sprite(&self) -> Result<Sprite> {
+    pub fn header_sprite(&self, custom_mode: bool) -> Result<Sprite> {
         let sprite = &self.sprite;
-        let region = Size::from_wh(16 * 16, 24).to_region().move_y(64);
+        let offset = if custom_mode { 96 } else { 64 };
+        let region = Size::from_wh(16 * 16, 24).to_region().move_y(offset);
         sprite.clip(region).or_fail()
     }
 
@@ -70,6 +71,23 @@ impl Assets {
         ])
     }
 
+    pub fn small_digit_sprites(&self) -> Result<[Sprite; 10]> {
+        let sprite = &self.sprite;
+        let region = Size::from_wh(4, 4).to_region().move_x(192);
+        Ok([
+            sprite.clip(region.shift_x(0)).or_fail()?,
+            sprite.clip(region.shift_x(1)).or_fail()?,
+            sprite.clip(region.shift_x(2)).or_fail()?,
+            sprite.clip(region.shift_x(3)).or_fail()?,
+            sprite.clip(region.shift_x(4)).or_fail()?,
+            sprite.clip(region.shift_x(0).shift_y(2)).or_fail()?,
+            sprite.clip(region.shift_x(1).shift_y(2)).or_fail()?,
+            sprite.clip(region.shift_x(2).shift_y(2)).or_fail()?,
+            sprite.clip(region.shift_x(3).shift_y(2)).or_fail()?,
+            sprite.clip(region.shift_x(4).shift_y(2)).or_fail()?,
+        ])
+    }
+
     pub fn button_sprites(&self) -> Result<[Sprite; 4]> {
         let sprite = &self.sprite;
         let region = Size::from_wh(24, 24).to_region().move_y(32).move_x(80);
@@ -79,6 +97,12 @@ impl Assets {
             sprite.clip(region.shift_x(3)).or_fail()?,
             sprite.clip(region.shift_x(2)).or_fail()?,
         ])
+    }
+
+    pub fn custom_button_sprite(&self) -> Result<Sprite> {
+        let sprite = &self.sprite;
+        let region = Size::from_wh(24, 24).to_region().move_y(32).move_x(192);
+        sprite.clip(region).or_fail()
     }
 }
 

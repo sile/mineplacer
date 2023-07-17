@@ -19,24 +19,37 @@ pub struct Window {
     start_8x15_button: Button,
     start_16x30_button: Button,
     start_16x30_with_wormhole_button: Button,
+    start_custom_button: Button,
     pressing: bool,
 }
 
 impl Window {
-    pub const MARGIN_SIZE: u32 = 3;
-    pub const CELL_SIZE: u32 = 16;
-    pub const HEADER_SIZE: Size = Size::from_wh(Self::CELL_SIZE * 16, 24);
-    pub const BOARD_SIZE: Size = Size::from_wh(Self::CELL_SIZE * 16, Self::CELL_SIZE * 30);
-    pub const WINDOW_SIZE: Size = Size::from_wh(
-        Self::BOARD_SIZE.width + Self::MARGIN_SIZE * 2,
-        Self::BOARD_SIZE.height + Self::MARGIN_SIZE * 3 + Self::HEADER_SIZE.height,
-    );
+    const MARGIN_SIZE: u32 = 3;
+    const CELL_SIZE: u32 = 16;
 
-    pub fn load_assets(&mut self) -> Result<()> {
+    fn header_size(&self, model: &Model) -> Size {
+        Size::from_wh(Self::CELL_SIZE * model.board_size().width, 24)
+    }
+
+    fn board_size(&self, model: &Model) -> Size {
+        Size::from_wh(
+            Self::CELL_SIZE * model.board_size().width,
+            Self::CELL_SIZE * model.board_size().height,
+        )
+    }
+
+    pub fn window_size(&self, model: &Model) -> Size {
+        Size::from_wh(
+            Self::MARGIN_SIZE * 2 + self.board_size(model).width,
+            Self::MARGIN_SIZE * 3 + self.header_size(model).height + self.board_size(model).height,
+        )
+    }
+
+    pub fn load_assets(&mut self, model: &Model) -> Result<()> {
         self.assets.load().or_fail()?;
 
         let button_region =
-            Region::new(self.header_region().position, Size::from_wh(20, 21)).move_y(1);
+            Region::new(self.header_region(model).position, Size::from_wh(20, 21)).move_y(1);
         let [start_8x16, start_16x30, start_16x30_with_wormhole, help] =
             self.assets.button_sprites().or_fail()?;
         self.start_8x15_button = Button::new(button_region.move_x(145), start_8x16);
@@ -45,38 +58,62 @@ impl Window {
             Button::new(button_region.move_x(193), start_16x30_with_wormhole);
         self.help_button = Button::new(button_region.move_x(232), help);
 
+        let custom = self.assets.custom_button_sprite().or_fail()?;
+        self.start_custom_button = Button::new(
+            Region::new(
+                self.help_button.region.move_x(-32).position,
+                Size::from_wh(23, 21),
+            ),
+            custom,
+        );
+
         Ok(())
     }
 
-    fn header_region(&self) -> Region {
-        Self::HEADER_SIZE
+    fn header_region(&self, model: &Model) -> Region {
+        self.header_size(model)
             .to_region()
             .move_x(Self::MARGIN_SIZE as i32)
             .move_y(Self::MARGIN_SIZE as i32)
     }
 
-    fn board_region(&self) -> Region {
-        Self::BOARD_SIZE
+    fn board_region(&self, model: &Model) -> Region {
+        self.board_size(model)
             .to_region()
             .move_x(Self::MARGIN_SIZE as i32)
-            .move_y(self.header_region().end().y + Self::MARGIN_SIZE as i32)
+            .move_y(self.header_region(model).end().y + Self::MARGIN_SIZE as i32)
     }
 
     pub fn render(&self, canvas: &mut Canvas, model: &Model) -> Result<()> {
         canvas.fill_color(BACKGROUND_COLOR);
 
-        let header_region = self.header_region();
+        let header_region = self.header_region(model);
         self.render_header(&mut canvas.subregion(header_region), model)
             .or_fail()?;
 
         self.help_button.render(canvas).or_fail()?;
-        self.start_8x15_button.render(canvas).or_fail()?;
-        self.start_16x30_button.render(canvas).or_fail()?;
-        self.start_16x30_with_wormhole_button
-            .render(canvas)
-            .or_fail()?;
+        if model.is_custom_mode() {
+            self.start_custom_button.render(canvas).or_fail()?;
+            let mut offset = self
+                .start_custom_button
+                .render_region()
+                .position
+                .move_x(5)
+                .move_y(14);
+            self.render_small_number(canvas, offset, model.board_size().width as usize)
+                .or_fail()?;
+            offset = offset.move_x(12);
+            self.render_small_number(canvas, offset, model.board_size().height as usize)
+                .or_fail()?;
+        } else {
+            self.start_8x15_button.render(canvas).or_fail()?;
+            self.start_16x30_button.render(canvas).or_fail()?;
+            self.start_16x30_with_wormhole_button
+                .render(canvas)
+                .or_fail()?;
+        }
 
-        let board_region = self.board_region();
+        let board_region = self.board_region(model);
         self.render_board(&mut canvas.subregion(board_region), model)
             .or_fail()?;
 
@@ -84,8 +121,17 @@ impl Window {
     }
 
     fn render_header(&self, canvas: &mut Canvas, model: &Model) -> Result<()> {
-        let sprite = self.assets.header_sprite().or_fail()?;
+        let sprite = self
+            .assets
+            .header_sprite(model.is_custom_mode())
+            .or_fail()?;
         canvas.draw_sprite(&sprite);
+
+        if model.is_custom_mode() {
+            let offset = Position::from_xy(164, 5);
+            self.render_number(canvas, offset, model.wormholes())
+                .or_fail()?;
+        }
 
         let elapsed_time = match model.state() {
             State::Initial => return Ok(()),
@@ -97,7 +143,10 @@ impl Window {
         let offset = Position::from_xy(24 + 10 * 2, 5);
         self.render_number(canvas, offset, elapsed).or_fail()?;
 
-        let offset = Position::from_xy(84 + 10, 5);
+        let mut offset = Position::from_xy(84 + 10, 5);
+        if model.is_custom_mode() {
+            offset.x += 10;
+        };
         self.render_number(canvas, offset, model.remaining_mines())
             .or_fail()?;
 
@@ -117,6 +166,25 @@ impl Window {
             let sprite = &sprites[digit];
             canvas.offset(offset).draw_sprite(sprite);
             offset.x -= 10;
+            number /= 10;
+            first = false;
+        }
+        Ok(())
+    }
+
+    fn render_small_number(
+        &self,
+        canvas: &mut Canvas,
+        mut offset: Position,
+        mut number: usize,
+    ) -> Result<()> {
+        let sprites = self.assets.small_digit_sprites().or_fail()?;
+        let mut first = true;
+        while number > 0 || first {
+            let digit = number % 10;
+            let sprite = &sprites[digit];
+            canvas.offset(offset).draw_sprite(sprite);
+            offset.x -= 4;
             number /= 10;
             first = false;
         }
@@ -168,11 +236,15 @@ impl Window {
             }
             _ => {}
         }
-        self.start_8x15_button.handle_event(&event).or_fail()?;
-        self.start_16x30_button.handle_event(&event).or_fail()?;
-        self.start_16x30_with_wormhole_button
-            .handle_event(&event)
-            .or_fail()?;
+        if model.is_custom_mode() {
+            self.start_custom_button.handle_event(&event).or_fail()?;
+        } else {
+            self.start_8x15_button.handle_event(&event).or_fail()?;
+            self.start_16x30_button.handle_event(&event).or_fail()?;
+            self.start_16x30_with_wormhole_button
+                .handle_event(&event)
+                .or_fail()?;
+        }
         self.help_button.handle_event(&event).or_fail()?;
 
         Ok(())
@@ -194,6 +266,10 @@ impl Window {
         self.start_16x30_with_wormhole_button.take_clicked()
     }
 
+    pub fn take_start_custom_button_clicked(&mut self) -> bool {
+        self.start_custom_button.take_clicked()
+    }
+
     fn handle_mouse_event(&mut self, event: &MouseEvent, model: &mut Model) -> Result<()> {
         let pixel_position = event.position();
 
@@ -204,8 +280,8 @@ impl Window {
         if matches!(event, MouseEvent::Up { .. }) && self.pressing {
             self.pressing = false;
 
-            if self.board_region().contains(&pixel_position) {
-                let cell_pixel_position = pixel_position - self.board_region().start();
+            if self.board_region(model).contains(&pixel_position) {
+                let cell_pixel_position = pixel_position - self.board_region(model).start();
                 let cell_position = cell_pixel_position / Self::CELL_SIZE;
                 model.handle_click(cell_position);
             }
@@ -232,6 +308,13 @@ impl Button {
     }
 
     pub fn render(&self, canvas: &mut Canvas) -> Result<()> {
+        canvas
+            .subregion(self.render_region())
+            .draw_sprite(&self.sprite);
+        Ok(())
+    }
+
+    pub fn render_region(&self) -> Region {
         let mut region = self.region;
         match self.state {
             ButtonState::Normal => {}
@@ -244,8 +327,7 @@ impl Button {
                 region.size.height -= 2;
             }
         };
-        canvas.subregion(region).draw_sprite(&self.sprite);
-        Ok(())
+        region
     }
 
     pub fn handle_event(&mut self, event: &Event) -> Result<()> {

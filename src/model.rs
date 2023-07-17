@@ -1,4 +1,5 @@
 use pagurus::{
+    failure::OrFail,
     random::StdRng,
     spatial::{Contains, Position, Region, Size},
     Result, System,
@@ -15,14 +16,88 @@ pub enum Level {
     #[default]
     Large,
     LargeWithWormhole,
+    Custom {
+        width: usize,
+        height: usize,
+        mines: usize,
+        wormholes: usize,
+    },
 }
 
 impl Level {
+    pub fn from_qs(qs: &str) -> Result<Self> {
+        let mut width: usize = 16;
+        let mut height: usize = 30;
+        let mut mines: usize = 99;
+        let mut wormholes: usize = 99;
+
+        qs.starts_with('?').or_fail()?;
+        for kv in qs[1..].split('&') {
+            match kv.splitn(2, '=').collect::<Vec<_>>().as_slice() {
+                ["width", v] => {
+                    width = v
+                        .parse::<usize>()
+                        .ok()
+                        .filter(|v| (16..=64).contains(v))
+                        .or_fail()
+                        .map_err(|f| {
+                            f.message("'width' parameter should be a integer between 16 and 64")
+                        })?;
+                }
+                ["height", v] => {
+                    height = v
+                        .parse::<usize>()
+                        .ok()
+                        .filter(|v| (16..=64).contains(v))
+                        .or_fail()
+                        .map_err(|f| {
+                            f.message("'height' parameter should be a integer between 16 and 64")
+                        })?;
+                }
+                ["mines", v] => {
+                    mines = v
+                        .parse::<usize>()
+                        .ok()
+                        .filter(|v| (1..=999).contains(v))
+                        .or_fail()
+                        .map_err(|f| {
+                            f.message("'mines' parameter should be a integer between 1 and 1000")
+                        })?;
+                }
+                ["wormholes", v] => {
+                    wormholes = v
+                        .parse::<usize>()
+                        .ok()
+                        .filter(|v| (0..=999).contains(v))
+                        .or_fail()
+                        .map_err(|f| {
+                            f.message(
+                                "'wormholes' parameter should be a integer between 0 and 1000",
+                            )
+                        })?;
+                }
+                _ => {}
+            }
+        }
+        let cells = width * height;
+        (mines + wormholes <= cells)
+            .or_fail()
+            .map_err(|f| f.message("Too many mines and wormholes"))?;
+
+        Ok(Self::Custom {
+            width,
+            height,
+            mines,
+            wormholes,
+        })
+    }
+
     fn mines(self) -> usize {
         match self {
             Level::Small => 15,
             Level::Large => 99,
             Level::LargeWithWormhole => 99,
+            Level::Custom { mines, .. } => mines,
         }
     }
 
@@ -31,6 +106,7 @@ impl Level {
             Level::Small => 0,
             Level::Large => 0,
             Level::LargeWithWormhole => 99,
+            Level::Custom { wormholes, .. } => wormholes,
         }
     }
 
@@ -39,6 +115,7 @@ impl Level {
             Level::Small => 8,
             Level::Large => 16,
             Level::LargeWithWormhole => 16,
+            Level::Custom { width, .. } => width,
         }
     }
 
@@ -47,6 +124,7 @@ impl Level {
             Level::Small => 15,
             Level::Large => 30,
             Level::LargeWithWormhole => 30,
+            Level::Custom { height, .. } => height,
         }
     }
 
@@ -55,6 +133,19 @@ impl Level {
             Level::Small => Position::from_xy(4, 7),
             Level::Large => Position::from_xy(0, 0),
             Level::LargeWithWormhole => Position::from_xy(0, 0),
+            Level::Custom { .. } => Position::from_xy(0, 0),
+        }
+    }
+
+    pub fn is_custom(self) -> bool {
+        matches!(self, Level::Custom { .. })
+    }
+
+    pub fn board_size(self) -> Size {
+        if let Level::Custom { width, height, .. } = self {
+            Size::from_wh(width as u32, height as u32)
+        } else {
+            Size::from_wh(WIDTH as u32, HEIGHT as u32)
         }
     }
 }
@@ -83,13 +174,23 @@ pub struct Model {
 impl Model {
     pub fn initialize<S: System>(&mut self, system: &mut S) -> Result<()> {
         self.rng = StdRng::from_clock_seed(system.clock_unix_time());
-        self.board.region.size = Size::from_wh(WIDTH as u32, HEIGHT as u32);
+        self.board
+            .set_board_size(Size::from_wh(WIDTH as u32, HEIGHT as u32));
         Ok(())
     }
 
-    pub fn start_game<S: System>(&mut self, system: &mut S, level: Level) -> Result<()> {
+    pub fn set_custom_level(&mut self, level: Level) {
+        self.board.set_board_size(level.board_size());
+        self.level = level;
+    }
+
+    pub fn start_game<S: System>(&mut self, system: &mut S, mut level: Level) -> Result<()> {
+        if self.level.is_custom() {
+            level = self.level;
+        }
         self.level = level;
         self.board = Board::default();
+        self.board.set_board_size(level.board_size());
         self.board.region = Region::new(
             level.offset(),
             Size::from_wh(level.width() as u32, level.height() as u32),
@@ -108,6 +209,18 @@ impl Model {
         self.remaining_mines = level.mines();
         self.state = State::Playing;
         Ok(())
+    }
+
+    pub fn board_size(&self) -> Size {
+        self.board.region.size
+    }
+
+    pub fn wormholes(&self) -> usize {
+        self.level.wormholes()
+    }
+
+    pub fn is_custom_mode(&self) -> bool {
+        self.level.is_custom()
     }
 
     pub fn state(&self) -> State {
@@ -180,7 +293,7 @@ impl Model {
 
 #[derive(Debug, Default, Clone)]
 struct Board {
-    cells: [[Cell; WIDTH]; HEIGHT],
+    cells: Vec<Vec<Cell>>,
     region: Region,
 }
 
@@ -205,6 +318,11 @@ impl Board {
             }
         }
         expected - actual
+    }
+
+    fn set_board_size(&mut self, size: Size) {
+        self.cells = vec![vec![Cell::default(); size.width as usize]; size.height as usize];
+        self.region.size = size;
     }
 }
 
