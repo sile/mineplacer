@@ -29,4 +29,7 @@ The board size and the number of mines/wormholes can be customized by using the 
 For example, you can play with the maximum settings via the following URL:
 - https://sile.github.io/mineplacer?width=64&height=64&mines=999&wormholes=999
 
+Screenshot
+----------
+
 ![Mineplacer](web/image.jpg)
