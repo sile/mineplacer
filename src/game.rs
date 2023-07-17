@@ -136,10 +136,11 @@ impl<S: System> pagurus::Game<S> for Game {
         match name {
             "setQueryString" => {
                 let qs = std::str::from_utf8(data).or_fail()?;
-                let level = Level::from_qs(qs).or_fail()?;
-                self.model.set_custom_level(level);
-                self.fixed_window = FixedWindow::new(self.window.window_size(&self.model));
-                self.video_frame = VideoFrame::new(system.video_init(self.fixed_window.size()));
+                if let Some(level) = Level::from_qs(qs).or_fail()? {
+                    self.model.set_custom_level(level);
+                    self.fixed_window = FixedWindow::new(self.window.window_size(&self.model));
+                    self.video_frame = VideoFrame::new(system.video_init(self.fixed_window.size()));
+                }
                 Ok(())
             }
             _ => Err(Failure::new().message(format!("unknown command: {name:?}"))),

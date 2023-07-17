@@ -17,6 +17,11 @@ How to Play
 - When wormholes exist, a part of non-mine cells are hidden.
 - The condition for winning is that all mines are placed in the correct positions.
 
+Enable Touch Gesture
+--------------------
+
+If the query string parameter `gesture=true` is provided, panning and pinch zoom gestures will be enabled.
+
 Custom Mode
 -----------
 
@@ -27,7 +32,7 @@ The board size and the number of mines/wormholes can be customized by using the 
 - `wormholes` (between 0 and 999, default to 99)
 
 For example, you can play with the maximum settings via the following URL:
-- https://sile.github.io/mineplacer?width=64&height=64&mines=999&wormholes=999
+- https://sile.github.io/mineplacer?gesture=true&width=64&height=64&mines=999&wormholes=999
 
 Screenshot
 ----------

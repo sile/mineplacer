@@ -25,13 +25,17 @@ pub enum Level {
 }
 
 impl Level {
-    pub fn from_qs(qs: &str) -> Result<Self> {
+    pub fn from_qs(qs: &str) -> Result<Option<Self>> {
+        if !qs.starts_with('?') {
+            return Ok(None);
+        }
+
         let mut width: usize = 16;
         let mut height: usize = 30;
         let mut mines: usize = 99;
         let mut wormholes: usize = 99;
+        let mut custom = false;
 
-        qs.starts_with('?').or_fail()?;
         for kv in qs[1..].split('&') {
             match kv.splitn(2, '=').collect::<Vec<_>>().as_slice() {
                 ["width", v] => {
@@ -43,6 +47,7 @@ impl Level {
                         .map_err(|f| {
                             f.message("'width' parameter should be a integer between 16 and 64")
                         })?;
+                    custom = true;
                 }
                 ["height", v] => {
                     height = v
@@ -53,6 +58,7 @@ impl Level {
                         .map_err(|f| {
                             f.message("'height' parameter should be a integer between 16 and 64")
                         })?;
+                    custom = true;
                 }
                 ["mines", v] => {
                     mines = v
@@ -63,6 +69,7 @@ impl Level {
                         .map_err(|f| {
                             f.message("'mines' parameter should be a integer between 1 and 1000")
                         })?;
+                    custom = true;
                 }
                 ["wormholes", v] => {
                     wormholes = v
@@ -75,21 +82,26 @@ impl Level {
                                 "'wormholes' parameter should be a integer between 0 and 1000",
                             )
                         })?;
+                    custom = true;
                 }
                 _ => {}
             }
         }
+        if !custom {
+            return Ok(None);
+        }
+
         let cells = width * height;
         (mines + wormholes <= cells)
             .or_fail()
             .map_err(|f| f.message("Too many mines and wormholes"))?;
 
-        Ok(Self::Custom {
+        Ok(Some(Self::Custom {
             width,
             height,
             mines,
             wormholes,
-        })
+        }))
     }
 
     fn mines(self) -> usize {

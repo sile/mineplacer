@@ -14,8 +14,8 @@
     <title>Mineplacer</title>
   </head>
   <body style="background-color:black">
-    <canvas id="canvas" style="background-color:black; padding:0; margin:auto; display:block"></canvas>
-    <script src="https://cdn.jsdelivr.net/npm/pagurus@0.6.7/dist/pagurus.min.js"></script>
+    <canvas id="canvas" style="background-color:black; padding:0; margin:auto; display:block; touch-action:manipulation"></canvas>
+    <script src="https://cdn.jsdelivr.net/npm/pagurus@0.6.8/dist/pagurus.min.js"></script>
     <script>
       if ("serviceWorker" in navigator) {
           navigator.serviceWorker.register('./sw.js').catch((error) => {
@@ -23,9 +23,11 @@
           });
       }
 
+      const disableTouchEvents = new URLSearchParams(window.location.search).get('gesture') !== 'true';
+
       Pagurus.Game.load("game.wasm").then(async game => {
           const canvas = document.getElementById("canvas");
-          const system = await Pagurus.System.create(game.memory, { canvas });
+          const system = await Pagurus.System.create(game.memory, { canvas, disableTouchEvents });
 
           const resizeCanvas = () => {
               canvas.height = document.body.clientHeight * 0.95;
@@ -36,13 +38,11 @@
           window.addEventListener('resize', resizeCanvas);
 
           game.initialize(system);
-          if (window.location.search) {
-              try {
-                  const qs = new TextEncoder().encode(window.location.search)
-                  game.command(system, "setQueryString", qs);
-              } catch (error) {
-                  alert('[WARNING] ' + JSON.parse(error.message)['message'] + ' (custom mode is disabled)');
-              }
+          try {
+              const qs = new TextEncoder().encode(window.location.search)
+              game.command(system, "setQueryString", qs);
+          } catch (error) {
+              alert('[WARNING] ' + JSON.parse(error.message)['message'] + ' (custom mode is disabled)');
           }
 
           while (true) {
