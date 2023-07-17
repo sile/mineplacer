@@ -17,4 +17,16 @@ How to Play
 - When wormholes exist, a part of non-mine cells are hidden.
 - The condition for winning is that all mines are placed in the correct positions.
 
+Custom Mode
+-----------
+
+The board size and the number of mines/wormholes can be customized by using the following query string parameters:
+- `width` (between 16 and 64, default to 16)
+- `height` (between 16 and 64, default to 30)
+- `mines` (between 1 and 999, default to 99)
+- `wormholes` (between 0 and 999, default to 99)
+
+For example, you can play with the maximum settings via the following URL:
+- https://sile.github.io/mineplacer?width=64&height=64&mines=999&wormholes=999
+
 ![Mineplacer](web/image.jpg)
