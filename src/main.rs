@@ -26,6 +26,6 @@ fn file_println(msg: &str) {
     let _ = OpenOptions::new()
         .create(true)
         .append(true)
-        .open("snake_game.log")
+        .open("mineplacer.log")
         .and_then(|mut file| writeln!(file, "{}", msg));
 }
