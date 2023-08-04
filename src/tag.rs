@@ -1,4 +1,4 @@
-use pagurus::timeout::TimeoutTag;
+use pagurus::event::TimeoutTag;
 
 pub const RENDERING_TIMEOUT: TimeoutTag = TimeoutTag::new(0);
 pub const START_8X15_TIMEOUT: TimeoutTag = TimeoutTag::new(1);

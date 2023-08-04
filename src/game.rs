@@ -1,7 +1,6 @@
 use crate::model::Level;
 use crate::tag;
 use crate::{model::Model, view::Window};
-use pagurus::event::{TimeoutEvent, WindowEvent};
 use pagurus::failure::Failure;
 use pagurus::image::{Canvas, Color};
 use pagurus::{
@@ -55,36 +54,23 @@ impl<S: System> pagurus::Game<S> for Game {
     fn handle_event(&mut self, system: &mut S, event: Event) -> Result<bool> {
         let event = self.fixed_window.handle_event(event);
         match event {
-            Event::Window(WindowEvent::RedrawNeeded { .. }) => {
+            Event::WindowResized(_) => {
                 self.video_frame = VideoFrame::new(system.video_init(self.fixed_window.size()));
                 self.render(system).or_fail()?;
             }
-            Event::Terminating => return Ok(false),
-            Event::Timeout(TimeoutEvent {
-                tag: tag::RENDERING_TIMEOUT,
-                ..
-            }) => {
+            Event::Timeout(tag::RENDERING_TIMEOUT) => {
                 self.render(system).or_fail()?;
                 system.clock_set_timeout(tag::RENDERING_TIMEOUT, RENDER_TIMEOUT_DURATION);
             }
-            Event::Timeout(TimeoutEvent {
-                tag: tag::START_8X15_TIMEOUT,
-                ..
-            }) => {
+            Event::Timeout(tag::START_8X15_TIMEOUT) => {
                 self.model.start_game(system, Level::Small).or_fail()?;
                 self.render(system).or_fail()?;
             }
-            Event::Timeout(TimeoutEvent {
-                tag: tag::START_16X30_TIMEOUT,
-                ..
-            }) => {
+            Event::Timeout(tag::START_16X30_TIMEOUT) => {
                 self.model.start_game(system, Level::Large).or_fail()?;
                 self.render(system).or_fail()?;
             }
-            Event::Timeout(TimeoutEvent {
-                tag: tag::START_16X30_WITH_WORMHOLE_TIMEOUT,
-                ..
-            }) => {
+            Event::Timeout(tag::START_16X30_WITH_WORMHOLE_TIMEOUT) => {
                 self.model
                     .start_game(system, Level::LargeWithWormhole)
                     .or_fail()?;

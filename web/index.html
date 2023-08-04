@@ -15,7 +15,7 @@
   </head>
   <body style="background-color:black">
     <canvas id="canvas" style="background-color:black; padding:0; margin:auto; display:block; touch-action:manipulation"></canvas>
-    <script src="https://cdn.jsdelivr.net/npm/pagurus@0.6.8/dist/pagurus.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pagurus@0.7.0/dist/pagurus.min.js"></script>
     <script>
       if ("serviceWorker" in navigator) {
           navigator.serviceWorker.register('./sw.js').catch((error) => {
@@ -32,7 +32,7 @@
           const resizeCanvas = () => {
               canvas.height = document.body.clientHeight * 0.95;
               canvas.width = document.body.clientWidth * 0.95;
-              system.notifyRedrawNeeded();
+              system.requestRedraw();
           }
           resizeCanvas();
           window.addEventListener('resize', resizeCanvas);
