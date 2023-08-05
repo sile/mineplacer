@@ -12,7 +12,7 @@ fn main() -> pagurus::Result<()> {
     let mut game = mineplacer::game::Game::default();
     game.initialize(&mut system).or_fail()?;
     while let Ok(event) = system.next_event() {
-        if matches!(event, Event::Key(KeyEvent::Up { key: Key::Esc })) {
+        if matches!(event, Event::Key(KeyEvent { key: Key::Esc, .. })) {
             break;
         }
         if !game.handle_event(&mut system, event).or_fail()? {
