@@ -15,19 +15,21 @@
   </head>
   <body style="background-color:black">
     <canvas id="canvas" style="background-color:black; padding:0; margin:auto; display:block; touch-action:manipulation"></canvas>
-    <script src="https://cdn.jsdelivr.net/npm/pagurus@0.7.1/dist/pagurus.min.js"></script>
-    <script>
+    <script type="module">
+      import * as Pagurus from "https://cdn.jsdelivr.net/npm/pagurus@0.7.2/dist/pagurus.js";
+
       if ("serviceWorker" in navigator) {
           navigator.serviceWorker.register('./sw.js').catch((error) => {
               console.log('Service worker registration failed:', error);
           });
       }
 
-      const disableTouchEvents = new URLSearchParams(window.location.search).get('gesture') !== 'true';
+      const disableTouchEvents = new URLSearchParams(window.location.search).get('gesture') === 'true';
+      const disableKeyEvents = true;
 
       Pagurus.Game.load("game.wasm").then(async game => {
           const canvas = document.getElementById("canvas");
-          const system = await Pagurus.System.create(game.memory, { canvas, disableTouchEvents });
+          const system = await Pagurus.System.create(game.memory, { canvas, disableTouchEvents, disableKeyEvents });
 
           const resizeCanvas = () => {
               canvas.height = document.body.clientHeight * 0.95;
