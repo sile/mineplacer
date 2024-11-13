@@ -1,5 +1,5 @@
+use orfail::OrFail;
 use pagurus::event::{Event, Key, KeyEvent};
-use pagurus::failure::OrFail;
 use pagurus::Game;
 use pagurus_tui::TuiSystem;
 use std::fs::OpenOptions;

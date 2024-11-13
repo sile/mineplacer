@@ -2,9 +2,9 @@ use crate::{
     asset::Assets,
     model::{Model, State},
 };
+use orfail::OrFail;
 use pagurus::{
     event::{Event, MouseEvent},
-    failure::OrFail,
     image::{Canvas, Color, Sprite},
     spatial::{Contains, Position, Region, Size},
     Result,
@@ -331,7 +331,9 @@ impl Button {
     }
 
     pub fn handle_event(&mut self, event: &Event) -> Result<()> {
-        let Event::Mouse(event) = event else { return Ok(()) };
+        let Event::Mouse(event) = event else {
+            return Ok(());
+        };
         let position = event.position();
         if !self.region.contains(&position) {
             self.state = ButtonState::Normal;

@@ -22,6 +22,7 @@ crate-type = ["lib", "cdylib"]
 tui = ["pagurus_tui"]
 
 [dependencies]
+orfail = { version = "1.1.0", features = ["serde"] }
 pagurus = { version = "0.7.2", features = ["fixed_window", "random", "image", "wasm"]}
 pagurus_tui = { version = "0.7.2", optional = true }
 png = "0.17.8"

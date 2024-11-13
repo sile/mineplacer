@@ -1,5 +1,5 @@
+use orfail::OrFail;
 use pagurus::{
-    failure::OrFail,
     random::StdRng,
     spatial::{Contains, Position, Region, Size},
     Result, System,
@@ -43,9 +43,8 @@ impl Level {
                         .parse::<usize>()
                         .ok()
                         .filter(|v| (16..=64).contains(v))
-                        .or_fail()
-                        .map_err(|f| {
-                            f.message("'width' parameter should be a integer between 16 and 64")
+                        .or_fail_with(|_| {
+                            "'width' parameter should be a integer between 16 and 64".to_owned()
                         })?;
                     custom = true;
                 }
@@ -54,9 +53,8 @@ impl Level {
                         .parse::<usize>()
                         .ok()
                         .filter(|v| (16..=64).contains(v))
-                        .or_fail()
-                        .map_err(|f| {
-                            f.message("'height' parameter should be a integer between 16 and 64")
+                        .or_fail_with(|_| {
+                            "'height' parameter should be a integer between 16 and 64".to_owned()
                         })?;
                     custom = true;
                 }
@@ -65,9 +63,8 @@ impl Level {
                         .parse::<usize>()
                         .ok()
                         .filter(|v| (1..=999).contains(v))
-                        .or_fail()
-                        .map_err(|f| {
-                            f.message("'mines' parameter should be a integer between 1 and 1000")
+                        .or_fail_with(|_| {
+                            "'mines' parameter should be a integer between 1 and 1000".to_owned()
                         })?;
                     custom = true;
                 }
@@ -76,11 +73,9 @@ impl Level {
                         .parse::<usize>()
                         .ok()
                         .filter(|v| (0..=999).contains(v))
-                        .or_fail()
-                        .map_err(|f| {
-                            f.message(
-                                "'wormholes' parameter should be a integer between 0 and 1000",
-                            )
+                        .or_fail_with(|_| {
+                            "'wormholes' parameter should be a integer between 0 and 1000"
+                                .to_owned()
                         })?;
                     custom = true;
                 }
@@ -92,9 +87,7 @@ impl Level {
         }
 
         let cells = width * height;
-        (mines + wormholes <= cells)
-            .or_fail()
-            .map_err(|f| f.message("Too many mines and wormholes"))?;
+        (mines + wormholes <= cells).or_fail_with(|_| "Too many mines and wormholes".to_owned())?;
 
         Ok(Some(Self::Custom {
             width,

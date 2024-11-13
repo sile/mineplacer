@@ -1,11 +1,9 @@
 use crate::model::Level;
 use crate::tag;
 use crate::{model::Model, view::Window};
-use pagurus::failure::Failure;
+use orfail::{Failure, OrFail};
 use pagurus::image::{Canvas, Color};
-use pagurus::{
-    event::Event, failure::OrFail, fixed_window::FixedWindow, video::VideoFrame, Result, System,
-};
+use pagurus::{event::Event, fixed_window::FixedWindow, video::VideoFrame, Result, System};
 use std::collections::VecDeque;
 use std::time::Duration;
 
@@ -113,7 +111,7 @@ impl<S: System> pagurus::Game<S> for Game {
                     return serde_json::to_vec(&action).or_fail();
                 }
             }
-            _ => pagurus::todo!(),
+            _ => return Err(Failure::new(format!("unknown query: {name:?}"))),
         }
         Ok(vec![])
     }
@@ -129,7 +127,7 @@ impl<S: System> pagurus::Game<S> for Game {
                 }
                 Ok(())
             }
-            _ => Err(Failure::new().message(format!("unknown command: {name:?}"))),
+            _ => Err(Failure::new(format!("unknown command: {name:?}"))),
         }
     }
 }
