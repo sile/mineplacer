@@ -3,7 +3,7 @@ name: Deploy
 # Controls when the workflow will run
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -14,16 +14,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: Install wasm32-unknown-unknown target
-        uses: actions-rs/toolchain@b2417cde72dcf67f306c0ae8e0828a81bf0b189f # v1.0.6
-        with:
-          toolchain: stable
-          target: wasm32-unknown-unknown
+      - run: rustup update stable
+      - run: rustup default stable
+      - run: rustup target add wasm32-unknown-unknown
       - name: Run cargo build
-        uses: actions-rs/cargo@ae10961054e4aa8b4aa7dffede299aaf087aa33b # v1.0.1
-        with:
-          command: build
-          args: --release --target=wasm32-unknown-unknown
+        run: cargo build --release --target=wasm32-unknown-unknown
       - name: Prepare static files
         run: |
           mkdir _site/
